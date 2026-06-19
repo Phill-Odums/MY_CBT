@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Course - CBT Staff Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #f5f5f5;
+        padding: 20px 0;
+    }
+    
+    .form-container {
+        max-width: 600px;
+        margin: 30px auto;
+        padding: 0 20px;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #4A5568);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+    }
+    
+    .form-header h1 {
+        margin: 0;
+        font-size: 28px;
+    }
+    
+    .form-header p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+    }
+    
+    .form-body {
+        padding: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 14px;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+        font-size: 14px;
+        width: 100%;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .form-text {
+        font-size: 12px;
+        color: #666;
+        margin-top: 0.3rem;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #0A6E0E);
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-weight: 600;
+        flex: 1;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(10, 110, 14, 0.4);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #999;
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-weight: 600;
+        flex: 1;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s;
+    }
+    
+    .btn-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+    
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 0;
+    }
+    
+    .errorlist li {
+        color: #dc3545;
+        font-size: 13px;
+        padding: 5px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1><i class="fas fa-plus-circle"></i> Create New Course</h1>
+            <p>Set up a new course with questions</p>
+        </div>
+        
+        <div class="form-body">
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.course_name.id_for_label }}">Course Name *</label>
+                    {{ form.course_name }}
+                    {% if form.course_name.errors %}
+                        <div class="errorlist">
+                            {% for error in form.course_name.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Enter a descriptive name for your course</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.description.id_for_label }}">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="errorlist">
+                            {% for error in form.description.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Optional: Add course details or instructions</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.total_questions.id_for_label }}">Total Questions *</label>
+                    {{ form.total_questions }}
+                    {% if form.total_questions.errors %}
+                        <div class="errorlist">
+                            {% for error in form.total_questions.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Number of questions students will be asked (1-100)</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.time_limit_minutes.id_for_label }}">Time Limit (minutes) *</label>
+                    {{ form.time_limit_minutes }}
+                    {% if form.time_limit_minutes.errors %}
+                        <div class="errorlist">
+                            {% for error in form.time_limit_minutes.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Maximum time allowed for the exam (1-300 minutes)</div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.pass_percentage.id_for_label }}">Pass Percentage (%) *</label>
+                    {{ form.pass_percentage }}
+                    {% if form.pass_percentage.errors %}
+                        <div class="errorlist">
+                            {% for error in form.pass_percentage.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Minimum score needed to pass (1-100%)</div>
+                </div>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">
+                        <i class="fas fa-check-circle"></i> Create Course
+                    </button>
+                    <a href="{% url 'cbt:staff_dashboard' %}" class="btn-cancel">
+                        <i class="fas fa-times-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

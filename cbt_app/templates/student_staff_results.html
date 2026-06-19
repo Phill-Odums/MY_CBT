@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+
+{% block title %}Results - {{ exam.course.course_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #D3D5D5);
+        min-height: 100vh;
+        padding: 40px 0;
+    }
+    
+    .results-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+    
+    .results-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .results-header {
+        background: linear-gradient(135deg, #656B71);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+    }
+    
+    .results-header h1 {
+        font-size: 32px;
+        font-weight: bold;
+        margin: 0 0 10px 0;
+    }
+    
+    .results-header p {
+        font-size: 16px;
+        opacity: 0.9;
+        margin: 0;
+    }
+    
+    .score-section {
+        padding: 40px 30px;
+        text-align: center;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .score-display {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        margin: 30px 0;
+    }
+    
+    .score-item {
+        text-align: center;
+    }
+    
+    .score-item h3 {
+        margin: 0 0 10px 0;
+        color: #999;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .score-item .value {
+        font-size: 48px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 16px;
+        margin: 20px 0;
+    }
+    
+    .badge-pass {
+        background: #d4edda;
+        color: #0A6E0E;
+    }
+    
+    .badge-fail {
+        background: #f8d7da;
+        color: #dc3545;
+    }
+    
+    .details-section {
+        padding: 30px;
+    }
+    
+    .details-section h4 {
+        color: #333;
+        margin: 0 0 20px 0;
+        font-size: 18px;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    
+    .detail-item {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+    }
+    
+    .detail-label {
+        font-size: 12px;
+        color: #999;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    
+    .detail-value {
+        font-size: 16px;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .answers-section {
+        padding: 30px;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .answers-section h4 {
+        color: #333;
+        margin: 0 0 20px 0;
+        font-size: 18px;
+    }
+    
+    .answer-item {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .answer-item.correct {
+        border-left-color: #0A6E0E;
+        background: #f0fdf4;
+    }
+    
+    .answer-item.incorrect {
+        border-left-color: #dc3545;
+        background: #fef2f2;
+    }
+    
+    .answer-item h5 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-size: 14px;
+    }
+    
+    .answer-item p {
+        margin: 5px 0;
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .answer-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+    
+    .badge-correct {
+        background: #d4edda;
+        color: #0A6E0E;
+    }
+    
+    .badge-incorrect {
+        background: #f8d7da;
+        color: #dc3545;
+    }
+    
+    .button-section {
+        padding: 30px;
+        text-align: center;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .btn-home {
+        background: linear-gradient(135deg, #667eea);
+        border: none;
+        border-radius: 5px;
+        padding: 12px 30px;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+    
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="results-card">
+        <div class="results-header">
+            <h1><i class="fas fa-trophy"></i> Exam Complete!</h1>
+            <p>{{ exam.course.course_name }}</p>
+        </div>
+        
+        <div class="score-section">
+            <div class="score-display">
+                <div class="score-item">
+                    <h3>Your Score</h3>
+                    <div class="value" style="color: #0A6E0E;">{{ exam.score }}/{{ exam.total_questions }}</div>
+                </div>
+                <div class="score-item">
+                    <h3>Percentage</h3>
+                    <div class="value" style="color: #667eea;">{{ score_percentage }}%</div>
+                </div>
+                <div class="score-item">
+                    <h3>Pass Mark</h3>
+                    <div class="value" style="color: #999;">{{ pass_mark }}%</div>
+                </div>
+            </div>
+            
+            <div>
+                {% if exam.passed %}
+                    <div class="status-badge badge-pass">
+                        <i class="fas fa-check-circle"></i> PASSED
+                    </div>
+                {% else %}
+                    <div class="status-badge badge-fail">
+                        <i class="fas fa-times-circle"></i> FAILED
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="details-section">
+            <h4><i class="fas fa-info-circle"></i> Exam Details</h4>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Student Name</div>
+                    <div class="detail-value">{{ exam.student_name }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Student ID</div>
+                    <div class="detail-value">{{ exam.student_id }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Time Taken</div>
+                    <div class="detail-value">{{ time_display }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Submitted</div>
+                    <div class="detail-value">{{ exam.end_time|date:"M d, Y" }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="answers-section">
+            <h4><i class="fas fa-list-check"></i> Your Answers</h4>
+            
+            {% for answer in answers %}
+                <div class="answer-item {% if answer.is_correct %}correct{% else %}incorrect{% endif %}">
+                    <h5>
+                        Question {{ forloop.counter }}
+                        {% if answer.is_correct %}
+                            <span class="answer-badge badge-correct"><i class="fas fa-check"></i> Correct</span>
+                        {% else %}
+                            <span class="answer-badge badge-incorrect"><i class="fas fa-times"></i> Incorrect</span>
+                        {% endif %}
+                    </h5>
+                    <p><strong>Question:</strong> {{ answer.question.text }}</p>
+                    <p><strong>Your Answer:</strong> {{ answer.get_selected_answer_display }}</p>
+                    {% if not answer.is_correct %}
+                        <p><strong>Correct Answer:</strong> {{ answer.question.get_correct_answer_display }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="button-section">
+            <a href="{% url 'cbt:student_course_code' %}" class="btn-home">
+                <i class="fas fa-arrow-left"></i> Take Another Exam
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

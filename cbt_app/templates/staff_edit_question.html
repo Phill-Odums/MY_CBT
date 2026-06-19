@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Question - {{ course.course_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #f5f5f5;
+        padding: 20px 0;
+    }
+    
+    .form-container {
+        max-width: 700px;
+        margin: 30px auto;
+        padding: 0 20px;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #4A5568);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+    }
+    
+    .form-header h1 {
+        margin: 0;
+        font-size: 28px;
+    }
+    
+    .form-header p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+    }
+    
+    .form-body {
+        padding: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 14px;
+    }
+    
+    .form-control, .form-select, textarea {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+        font-size: 14px;
+        width: 100%;
+        font-family: inherit;
+    }
+    
+    .form-control:focus, .form-select:focus, textarea:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .options-group {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 20px 0;
+    }
+    
+    .options-group h5 {
+        margin: 0 0 15px 0;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .option-row {
+        display: grid;
+        grid-template-columns: 30px 1fr;
+        gap: 10px;
+        margin-bottom: 15px;
+        align-items: start;
+    }
+    
+    .option-row label {
+        font-weight: 600;
+        color: #667eea;
+        padding-top: 12px;
+    }
+    
+    .correct-answer-group {
+        background: #f0f7ff;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 20px 0;
+        border-left: 4px solid #667eea;
+    }
+    
+    .correct-answer-group h5 {
+        margin: 0 0 15px 0;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .radio-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .radio-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-weight: 500;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #0A6E0E);
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-weight: 600;
+        width: 100%;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(10, 110, 14, 0.4);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #999;
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-weight: 600;
+        width: 100%;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s;
+        margin-top: 10px;
+        display: block;
+    }
+    
+    .btn-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+    
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 0;
+    }
+    
+    .errorlist li {
+        color: #dc3545;
+        font-size: 13px;
+        padding: 5px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-header">
+            <h1><i class="fas fa-edit"></i> Edit Question</h1>
+            <p>{{ course.course_name }}</p>
+        </div>
+        
+        <div class="form-body">
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.text.id_for_label }}">Question Text *</label>
+                    {{ form.text }}
+                </div>
+                
+                <div class="options-group">
+                    <h5><i class="fas fa-list"></i> Answer Options</h5>
+                    
+                    <div class="option-row">
+                        <label for="{{ form.option_a.id_for_label }}">A</label>
+                        <div>{{ form.option_a }}</div>
+                    </div>
+                    
+                    <div class="option-row">
+                        <label for="{{ form.option_b.id_for_label }}">B</label>
+                        <div>{{ form.option_b }}</div>
+                    </div>
+                    
+                    <div class="option-row">
+                        <label for="{{ form.option_c.id_for_label }}">C</label>
+                        <div>{{ form.option_c }}</div>
+                    </div>
+                    
+                    <div class="option-row">
+                        <label for="{{ form.option_d.id_for_label }}">D</label>
+                        <div>{{ form.option_d }}</div>
+                    </div>
+                </div>
+                
+                <div class="correct-answer-group">
+                    <h5><i class="fas fa-check-circle"></i> Correct Answer</h5>
+                    <div class="radio-group">
+                        {{ form.correct_answer }}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.difficulty.id_for_label }}">Difficulty Level *</label>
+                    {{ form.difficulty }}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.explanation.id_for_label }}">Explanation</label>
+                    {{ form.explanation }}
+                </div>
+                
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-check-circle"></i> Update Question
+                </button>
+                <a href="{% url 'cbt:staff_course_detail' course.id %}" class="btn-cancel">
+                    <i class="fas fa-times-circle"></i> Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

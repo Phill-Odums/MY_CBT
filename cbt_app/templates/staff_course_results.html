@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Course Results - {{ course.course_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: #f5f5f5;
+        padding: 20px 0;
+    }
+    
+    .results-container {
+        max-width: 1000px;
+        margin: 30px auto;
+        padding: 0 20px;
+    }
+    
+    .back-link {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+    
+    .back-link:hover {
+        text-decoration: underline;
+    }
+    
+    .header-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    
+    .header-card h1 {
+        margin: 0 0 10px 0;
+        color: #333;
+    }
+    
+    .header-card p {
+        margin: 0;
+        color: #666;
+    }
+    
+    .results-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .results-table thead {
+        background: linear-gradient(135deg, #4A5568);
+        color: white;
+    }
+    
+    .results-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    
+    .results-table td {
+        padding: 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .results-table tbody tr:hover {
+        background: #f9f9f9;
+    }
+    
+    .results-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .score-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 13px;
+    }
+    
+    .score-pass {
+        background: #d4edda;
+        color: #0A6E0E;
+    }
+    
+    .score-fail {
+        background: #f8d7da;
+        color: #dc3545;
+    }
+    
+    .btn-view {
+        background: #667eea;
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-view:hover {
+        background: #5568d3;
+        color: white;
+    }
+    
+    .empty-state {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 60px 20px;
+        text-align: center;
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+        color: #ddd;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <a href="{% url 'cbt:staff_dashboard' %}" class="back-link">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+    
+    <div class="header-card">
+        <h1><i class="fas fa-chart-bar"></i> {{ course.course_name }} - Results</h1>
+        <p>Student exam results and performance</p>
+    </div>
+    
+    {% if exams %}
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Student ID</th>
+                    <th>Score</th>
+                    <th>Percentage</th>
+                    <th>Status</th>
+                    <th>Submission Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for exam in exams %}
+                    <tr>
+                        <td>{{ exam.student_name }}</td>
+                        <td>{{ exam.student_id }}</td>
+                        <td>{{ exam.score }}/{{ exam.total_questions }}</td>
+                        <td>{{ exam.get_score_percentage }}%</td>
+                        <td>
+                            {% if exam.passed %}
+                                <span class="score-badge score-pass">
+                                    <i class="fas fa-check-circle"></i> Passed
+                                </span>
+                            {% else %}
+                                <span class="score-badge score-fail">
+                                    <i class="fas fa-times-circle"></i> Failed
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ exam.end_time|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'cbt:staff_student_exam_detail' course.id exam.id %}" class="btn-view">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No student results yet</h3>
+            <p>Results will appear here once students submit their exams</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

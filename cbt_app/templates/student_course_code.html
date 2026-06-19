@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Course Code - CBT Examination System{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #D3D5D5);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    
+    .code-container {
+        width: 100%;
+        max-width: 450px;
+        margin: 0 auto;
+        padding:1.5rem
+    }
+    
+    .code-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .code-header {
+        background: linear-gradient(135deg, gray);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+    }
+    
+    .code-header h1 {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .code-header p {
+        font-size: 14px;
+        opacity: 0.9;
+        margin: 5px 0 0 0;
+    }
+    
+    .code-body {
+        padding: 30px;
+    }
+    
+    .info-box {
+        background: #f0f7ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: #dc3545;
+        font-size: 14px;
+    }
+    
+    .info-box i {
+        margin-right: 8px;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 14px;
+    }
+    
+    .form-control {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+        font-size: 14px;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #0A6E0E);
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-weight: 600;
+        width: 100%;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+    
+    .back-link {
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 14px;
+    }
+    
+    .back-link a {
+        color: #0A6E0E;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .back-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        padding: 10px;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        font-size: 14px;
+    }
+    
+    .errorlist {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 0;
+    }
+    
+    .errorlist li {
+        color: #dc3545;
+        font-size: 13px;
+        padding: 5px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="code-container">
+    <div class="code-card">
+        <div class="code-header">
+            <h1><i class="fas fa-key"></i> Enter Course Code</h1>
+            <p>Access a course test</p>
+        </div>
+        
+        <div class="code-body">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <strong>Enter the 6-character course code</strong> provided by your instructor to access the test.
+            </div>
+            
+            {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
+            {% endif %}
+            
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.course_code.id_for_label }}">Course Code *</label>
+                    {{ form.course_code }}
+                    {% if form.course_code.errors %}
+                        <div class="errorlist">
+                            {% for error in form.course_code.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-arrow-right"></i> Continue
+                </button>
+            </form>
+            
+            <div class="back-link">
+                <a href="{% url 'cbt:login' %}">Go back to regular exam</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

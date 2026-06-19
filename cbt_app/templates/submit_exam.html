@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Exam - CBT Examination System{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, white 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: clamp(12px, 4vw, 20px);
+    }
+    
+    .submit-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .submit-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        background: white;
+        overflow: hidden;
+    }
+    
+    .submit-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: clamp(20px, 4vw, 30px);
+        text-align: center;
+    }
+    
+    .submit-header i {
+        font-size: clamp(36px, 10vw, 48px);
+        display: block;
+        margin-bottom: clamp(8px, 2vw, 10px);
+    }
+    
+    .submit-header h2 {
+        font-size: clamp(20px, 5vw, 24px);
+        margin: 0;
+        word-break: break-word;
+    }
+    
+    .submit-body {
+        padding: clamp(20px, 4vw, 30px);
+    }
+    
+    .warning-box {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: clamp(12px, 3vw, 15px);
+        border-radius: 5px;
+        margin-bottom: clamp(15px, 3vw, 20px);
+        font-size: clamp(13px, 3vw, 14px);
+    }
+    
+    .warning-box strong {
+        color: #856404;
+    }
+    
+    .warning-box p {
+        margin: 0;
+        color: #856404;
+        line-height: 1.4;
+    }
+    
+    .exam-summary {
+        background-color: #f8f9fa;
+        padding: clamp(12px, 3vw, 15px);
+        border-radius: 5px;
+        margin-bottom: clamp(15px, 3vw, 20px);
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: clamp(6px, 1.5vw, 8px) 0;
+        border-bottom: 1px solid #ddd;
+        font-size: clamp(12px, 3vw, 14px);
+        gap: 10px;
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+    
+    .summary-label {
+        font-weight: 600;
+        color: #555;
+        flex: 0 0 auto;
+    }
+    
+    .summary-value {
+        color: black;
+        font-weight: bold;
+        text-align: right;
+        word-break: break-word;
+    }
+    
+    .form-check {
+        margin-bottom: clamp(15px, 3vw, 20px);
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: clamp(12px, 3vw, 14px);
+    }
+    
+    .form-check-input {
+        width: 20px;
+        height: 20px;
+        margin-top: 2px;
+        accent-color: #667eea;
+        cursor: pointer;
+        flex-shrink: 0;
+        min-width: 20px;
+    }
+    
+    .form-check-label {
+        color: #555;
+        margin: 0;
+        cursor: pointer;
+        line-height: 1.4;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: clamp(8px, 2vw, 10px);
+        flex-wrap: wrap;
+    }
+    
+    .btn-confirm {
+        flex: 1;
+        background: linear-gradient(135deg, #28a745);
+        color: white;
+        padding: clamp(12px, 2.5vw, 14px) clamp(12px, 3vw, 20px);
+        font-weight: 600;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: clamp(13px, 3vw, 14px);
+        touch-action: manipulation;
+        min-width: 120px;
+    }
+    
+    .btn-confirm:active {
+        transform: scale(0.95);
+    }
+    
+    .btn-confirm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-cancel {
+        flex: 1;
+        background-color: #e9ecef;
+        color: #333;
+        padding: clamp(12px, 2.5vw, 14px) clamp(12px, 3vw, 20px);
+        font-weight: 600;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: clamp(13px, 3vw, 14px);
+        touch-action: manipulation;
+        text-decoration: none;
+        min-width: 120px;
+    }
+    
+    .btn-cancel:active {
+        transform: scale(0.95);
+    }
+    
+    .btn-cancel:hover {
+        background-color: #dee2e6;
+    }
+    
+    .alert {
+        font-size: clamp(12px, 3vw, 13px);
+        margin-top: 10px;
+    }
+    
+    @media (max-width: 480px) {
+        .button-group {
+            width: 100%;
+        }
+        
+        .btn-confirm,
+        .btn-cancel {
+            flex: 1 1 100%;
+            min-width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="submit-container">
+    <div class="submit-card">
+        <div class="submit-header">
+            <i class="fas fa-check-circle"></i>
+            <h2>Submit Exam</h2>
+        </div>
+        <div class="submit-body">
+            <div class="warning-box">
+                <strong>⚠️ Warning!</strong>
+                <p>Once you submit your exam, you <strong>cannot</strong> make any changes to your answers.</p>
+            </div>
+
+            <div class="exam-summary">
+                <div class="summary-row">
+                    <span class="summary-label">Student Name:</span>
+                    <span class="summary-value">{{ exam.student_name }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Student ID:</span>
+                    <span class="summary-value">{{ exam.student_id }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Total Questions:</span>
+                    <span class="summary-value">{{ exam.total_questions }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Exam:</span>
+                    <span class="summary-value">{{ exam.exam_config.name }}</span>
+                </div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-check">
+                    {{ form.confirm }}
+                    <label class="form-check-label" for="{{ form.confirm.id_for_label }}">
+                        I confirm that I have completed my exam and want to submit.
+                    </label>
+                    {% if form.confirm.errors %}
+                        <div class="alert alert-danger mt-2">{{ form.confirm.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="button-group">
+                    <a href="{% url 'cbt:exam' %}" class="btn btn-cancel">
+                        <i class="fas fa-arrow-left"></i> Back to Exam
+                    </a>
+                    <button type="submit" class="btn btn-confirm">
+                        <i class="fas fa-paper-plane"></i> Submit
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

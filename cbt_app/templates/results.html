@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+
+{% block title %}Exam Results - CBT Examination System{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    
+    .results-container {
+        max-width: 1000px;
+        margin: clamp(20px, 5vw, 40px) auto;
+        padding: clamp(12px, 4vw, 20px);
+        width: 100%;
+    }
+    
+    .result-header {
+        text-align: center;
+        margin-bottom: clamp(20px, 5vw, 40px);
+    }
+    
+    .result-header h1 {
+        font-size: clamp(24px, 6vw, 32px);
+        font-weight: bold;
+        margin: 0;
+        word-break: break-word;
+    }
+    
+    .result-status {
+        font-size: clamp(32px, 8vw, 48px);
+        font-weight: bold;
+        margin: clamp(15px, 3vw, 20px) 0;
+    }
+    
+    .result-status.passed {
+        color: #28a745;
+    }
+    
+    .result-status.failed {
+        color: #dc3545;
+    }
+    
+    .result-card {
+        background: white;
+        border-radius: 10px;
+        padding: clamp(20px, 4vw, 30px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    
+    .score-circle {
+        width: clamp(120px, 40vw, 200px);
+        height: clamp(120px, 40vw, 200px);
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto clamp(20px, 4vw, 30px);
+        color: white;
+        font-weight: bold;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        flex-shrink: 0;
+    }
+    
+    .score-circle.passed {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+    
+    .score-circle.failed {
+        background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+    }
+    
+    .score-percentage {
+        font-size: clamp(32px, 8vw, 48px);
+        line-height: 1;
+    }
+    
+    .score-label {
+        font-size: clamp(11px, 3vw, 14px);
+        opacity: 0.9;
+        margin-top: clamp(8px, 2vw, 10px);
+    }
+    
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: clamp(12px, 3vw, 20px);
+        margin: clamp(20px, 4vw, 30px) 0;
+    }
+    
+    .detail-box {
+        background-color: #f8f9fa;
+        padding: clamp(12px, 3vw, 20px);
+        border-radius: 8px;
+        text-align: center;
+    }
+    
+    .detail-label {
+        color: #999;
+        font-size: clamp(10px, 2.5vw, 12px);
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: clamp(6px, 1.5vw, 8px);
+        letter-spacing: 0.5px;
+    }
+    
+    .detail-value {
+        font-size: clamp(14px, 4vw, 24px);
+        font-weight: bold;
+        color: #667eea;
+        word-break: break-word;
+    }
+    
+    .answers-section {
+        margin-top: clamp(20px, 5vw, 40px);
+    }
+    
+    .answers-section h3 {
+        margin-bottom: clamp(15px, 3vw, 20px);
+        color: #333;
+        font-size: clamp(18px, 5vw, 22px);
+    }
+    
+    .answer-item {
+        background: white;
+        padding: clamp(15px, 3vw, 20px);
+        border-radius: 8px;
+        margin-bottom: clamp(10px, 2vw, 15px);
+        border-left: 4px solid;
+    }
+    
+    .answer-item.correct {
+        border-left-color: #28a745;
+    }
+    
+    .answer-item.incorrect {
+        border-left-color: #dc3545;
+    }
+    
+    .answer-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .answer-number {
+        background: #667eea;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: clamp(12px, 3vw, 14px);
+        flex-shrink: 0;
+    }
+    
+    .answer-status {
+        margin-left: auto;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: clamp(12px, 3vw, 14px);
+    }
+    
+    .answer-status.correct {
+        color: #28a745;
+    }
+    
+    .answer-status.incorrect {
+        color: #dc3545;
+    }
+    
+    .question-text {
+        margin: clamp(10px, 2vw, 15px) 0;
+        font-weight: 600;
+        color: #333;
+        font-size: clamp(14px, 3vw, 16px);
+        line-height: 1.4;
+        word-break: break-word;
+    }
+    
+    .answer-options {
+        margin: clamp(12px, 2vw, 15px) 0;
+        padding-left: clamp(15px, 5vw, 40px);
+    }
+    
+    .option-line {
+        margin: 8px 0;
+        padding: clamp(6px, 2vw, 8px);
+        border-radius: 4px;
+        font-size: clamp(13px, 3vw, 14px);
+        line-height: 1.4;
+    }
+    
+    .option-selected {
+        background-color: #cfe2ff;
+        border-left: 3px solid #0d6efd;
+    }
+    
+    .option-correct {
+        background-color: #d1e7dd;
+        border-left: 3px solid #198754;
+    }
+    
+    .buttons-group {
+        display: flex;
+        gap: clamp(8px, 2vw, 10px);
+        margin-top: clamp(20px, 5vw, 30px);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        padding: clamp(12px, 2.5vw, 14px) clamp(16px, 4vw, 30px);
+        font-weight: 600;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: clamp(13px, 3vw, 14px);
+        min-height: 44px;
+        touch-action: manipulation;
+    }
+    
+    .btn-action:active {
+        transform: scale(0.95);
+    }
+    
+    .btn-home {
+        background-color: #667eea;
+        color: white;
+    }
+    
+    .btn-home:hover {
+        background-color: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-review {
+        background-color: #e9ecef;
+        color: #333;
+    }
+    
+    .btn-review:hover {
+        background-color: #dee2e6;
+    }
+    
+    .explanation-box {
+        margin-top: clamp(10px, 2vw, 15px);
+        padding: clamp(10px, 2vw, 12px);
+        background-color: #e7f3ff;
+        border-radius: 4px;
+        font-size: clamp(13px, 3vw, 14px);
+    }
+    
+    .explanation-box strong {
+        color: #0056b3;
+    }
+    
+    .explanation-box p {
+        margin: clamp(6px, 1.5vw, 8px) 0 0 0;
+        color: #333;
+    }
+    
+    @media (max-width: 768px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .answer-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .answer-status {
+            margin-left: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="result-header">
+        <h1>Exam Submitted Successfully</h1>
+    </div>
+
+    <div class="result-card">
+        <div class="score-circle {% if exam.passed %}passed{% else %}failed{% endif %}">
+            <div class="score-percentage">{{ score_percentage }}%</div>
+            <div class="score-label">
+                {% if exam.passed %}
+                    ✅ PASSED
+                {% else %}
+                    ❌ FAILED
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="details-grid">
+            <div class="detail-box">
+                <div class="detail-label">Student Name</div>
+                <div class="detail-value" style="color: #333; font-size: 16px;">{{ exam.student_name }}</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Student ID</div>
+                <div class="detail-value" style="color: #333; font-size: 16px;">{{ exam.student_id }}</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Score</div>
+                <div class="detail-value">{{ exam.score }}/{{ exam.total_questions }}</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Time Taken</div>
+                <div class="detail-value" style="color: #333; font-size: 16px;">{{ time_display }}</div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">Pass Mark</div>
+                <div class="detail-value" style="color: #333; font-size: 16px;">{{ pass_mark }}%</div>
+            </div>
+        </div>
+
+        <div class="buttons-group">
+            <a href="{% url 'cbt:login' %}" class="btn-action btn-home">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

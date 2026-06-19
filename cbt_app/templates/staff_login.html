@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Login - CBT Examination System{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #D3D5D5);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    
+    .login-container {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    
+    .login-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .login-header {
+        background: linear-gradient(135deg, #4A5568);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+    }
+    
+    .login-header h1 {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .login-header p {
+        font-size: 14px;
+        opacity: 0.9;
+        margin: 5px 0 0 0;
+    }
+    
+    .login-body {
+        padding: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 14px;
+    }
+    
+    .form-control {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 12px 15px;
+        font-size: 14px;
+        width: 100%;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .btn-login {
+        background: linear-gradient(135deg, #4A5568);
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-weight: 600;
+        width: 100%;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(74, 85, 104, 0.4);
+        color: white;
+    }
+    
+    .register-link {
+        text-align: center;
+        margin-top: 1rem;
+        font-size: 14px;
+    }
+    
+    .register-link a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        padding: 10px;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        margin-bottom: 1rem;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <h1><i class="fas fa-chalkboard-user"></i> Staff Login</h1>
+            <p>Manage your courses and questions</p>
+        </div>
+        
+        <div class="login-body">
+            {% if error %}
+                <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
+            {% endif %}
+            
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-control" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" required>
+                </div>
+                
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            
+            <div class="register-link">
+                Don't have an account? <a href="{% url 'cbt:staff_register' %}">Register here</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

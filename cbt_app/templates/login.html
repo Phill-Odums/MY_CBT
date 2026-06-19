@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Login - CBT Examination System{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #D3D5D5);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    
+    .login-container {
+        width: 100%;
+        max-width: 450px;
+        margin: 0 auto;
+    }
+    
+    .login-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .login-header {
+        background: linear-gradient(135deg, #656B71);
+        color: white;
+        padding: clamp(20px, 5vw, 30px);
+        text-align: center;
+    }
+    
+    .login-header h1 {
+        font-size: clamp(24px, 6vw, 28px);
+        font-weight: bold;
+        margin: 0;
+        word-break: break-word;
+    }
+    
+    .login-header p {
+        font-size: clamp(12px, 4vw, 14px);
+        opacity: 0.9;
+        margin: 5px 0 0 0;
+    }
+    
+    .login-body {
+        padding: clamp(20px, 5vw, 30px);
+    }
+    
+    .exam-info {
+        background-color: #f8f9fa;
+        padding: clamp(12px, 3vw, 15px);
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    
+    .exam-info h6 {
+        color: #B12428;
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: clamp(13px, 4vw, 14px);
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #ddd;
+        font-size: clamp(12px, 3vw, 14px);
+        gap: 10px;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #555;
+        flex: 1;
+    }
+    
+    .info-value {
+        color: #0A6E0E;
+        font-weight: bold;
+        text-align: right;
+    }
+    
+    .form-control {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: clamp(10px, 3vw, 12px) clamp(10px, 3vw, 15px);\n        font-size: 16px;\n        font-size: 1rem;
+        width: 100%;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        outline: none;
+    }
+    
+    .mb-3 {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        font-size: clamp(13px, 4vw, 14px);
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn-start {
+        background: linear-gradient(135deg, #0A6E0E);
+        border: none;
+        border-radius: 5px;
+        padding: 14px 20px;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s;
+        font-size: 1rem;
+        min-height: 48px;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-start:active {
+        transform: scale(0.98);
+    }
+    
+    .btn-start:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(10, 110, 14, 0.4);
+        color: white;
+    }
+    
+    .error-message {
+        color: #dc3545;
+        font-size: clamp(12px, 3vw, 14px);
+        margin-top: 10px;
+    }
+    
+    .alert {
+        margin: 1rem 0;
+        font-size: clamp(13px, 3vw, 14px);
+    }
+    
+    div[style*=\"text-align: center\"] {
+        font-size: clamp(10px, 2.5vw, 12px) !important;
+        padding: 1rem 0.5rem;
+        line-height: 1.4;
+    }
+    
+    @media (max-width: 480px) {
+        body {
+            padding: 0.5rem;
+        }
+        
+        .login-container {
+            padding: 0;
+        }
+        
+        .login-card {
+            border-radius: 8px;
+        }
+    }
+    
+    .alert-error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    
+    .alert-error i {
+        margin-right: 8px;
+    }
+    
+    .btn-disabled {
+        background: #ccc !important;
+        cursor: not-allowed !important;
+        pointer-events: none;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    {% if error %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endif %}
+
+    <div class="card login-card">
+        <div class="login-header">
+            <h1>🎓 CBT EXAMINATION SYSTEM</h1>
+            <p>Computer-Based Test</p>
+        </div>
+        <div class="login-body">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                        <i class="fas fa-user"></i> Full Name
+                    </label>
+                    {{ form.full_name }}
+                    {% if form.full_name.errors %}
+                        <div class="error-message">{{ form.full_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.student_id.id_for_label }}" class="form-label">
+                        <i class="fas fa-id-card"></i> Student ID
+                    </label>
+                    {{ form.student_id }}
+                    {% if form.student_id.errors %}
+                        <div class="error-message">{{ form.student_id.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                {% if exam_config %}
+                <div class="exam-info">
+                    <h6><i class="fas fa-info-circle"></i> Exam Information</h6>
+                    <div class="info-row">
+                        <span class="info-label">📋 Questions:</span>
+                        <span class="info-value">{{ exam_config.total_questions }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">⏱️ Time Limit:</span>
+                        <span class="info-value">{{ exam_config.time_limit_minutes }} minutes</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">✅ Pass Mark:</span>
+                        <span class="info-value">{{ exam_config.pass_percentage }}%</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if already_taken %}
+                <div class="alert-error">
+                    <i class="fas fa-ban"></i>
+                    <strong>Exam Already Completed</strong><br>
+                    {{ error }}
+                </div>
+                <a href="{% url 'cbt:student_course_code' %}" class="btn btn-primary btn-start" style="background: #667eea; text-decoration: none;">
+                    <i class="fas fa-arrow-left"></i> Go to Course Code Entry
+                </a>
+                {% else %}
+                <button type="submit" class="btn btn-primary btn-start">
+                    <i class="fas fa-play"></i> START EXAM →
+                </button>
+                {% endif %}
+            </form>
+
+            <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+                <p>Please ensure you have a stable internet connection before starting.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

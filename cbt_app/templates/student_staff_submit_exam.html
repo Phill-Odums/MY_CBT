@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit Exam - {{ course.course_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #D3D5D5);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+    
+    .submit-container {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .submit-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .submit-header {
+        background: linear-gradient(135deg, #656B71);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+    }
+    
+    .submit-header h1 {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .submit-header p {
+        font-size: 14px;
+        opacity: 0.9;
+        margin: 5px 0 0 0;
+    }
+    
+    .submit-body {
+        padding: 30px;
+    }
+    
+    .info-box {
+        background: #f0f7ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        color: #1565c0;
+    }
+    
+    .info-box h5 {
+        margin: 0 0 10px 0;
+        font-weight: 600;
+    }
+    
+    .info-box p {
+        margin: 5px 0 0 0;
+        font-size: 14px;
+    }
+    
+    .summary {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 5px;
+        margin: 20px 0;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #ddd;
+        font-size: 14px;
+    }
+    
+    .summary-row:last-child {
+        border-bottom: none;
+    }
+    
+    .summary-label {
+        font-weight: 600;
+        color: #666;
+    }
+    
+    .summary-value {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .checkbox-group {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+    }
+    
+    .form-check {
+        display: flex;
+        align-items: flex-start;
+        margin: 0;
+    }
+    
+    .form-check-input {
+        margin-top: 2px;
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .form-check-label {
+        cursor: pointer;
+        font-size: 14px;
+        color: #333;
+        line-height: 1.5;
+    }
+    
+    .button-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #0A6E0E);
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(10, 110, 14, 0.4);
+        color: white;
+    }
+    
+    .btn-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .btn-cancel {
+        background: #999;
+        border: none;
+        border-radius: 5px;
+        padding: 12px 20px;
+        font-weight: 600;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s;
+    }
+    
+    .btn-cancel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="submit-container">
+    <div class="submit-card">
+        <div class="submit-header">
+            <h1><i class="fas fa-check-double"></i> Confirm Submission</h1>
+            <p>Review and submit your exam</p>
+        </div>
+        
+        <div class="submit-body">
+            <div class="info-box">
+                <h5><i class="fas fa-info-circle"></i> Exam Summary</h5>
+                <p>Please review your exam details before final submission. Once submitted, you cannot make any changes.</p>
+            </div>
+            
+            <div class="summary">
+                <div class="summary-row">
+                    <span class="summary-label">Student Name:</span>
+                    <span class="summary-value">{{ exam.student_name }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Student ID:</span>
+                    <span class="summary-value">{{ exam.student_id }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Course:</span>
+                    <span class="summary-value">{{ exam.course.course_name }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Total Questions:</span>
+                    <span class="summary-value">{{ exam.total_questions }}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Started:</span>
+                    <span class="summary-value">{{ exam.start_time|date:"M d, Y H:i" }}</span>
+                </div>
+            </div>
+            
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                
+                <div class="checkbox-group">
+                    <div class="form-check">
+                        <input 
+                            class="form-check-input" 
+                            type="checkbox" 
+                            id="confirm" 
+                            name="confirm" 
+                            required
+                        >
+                        <label class="form-check-label" for="confirm">
+                            I confirm that I have completed the exam and want to <strong>submit</strong> my answers now. This action cannot be undone.
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-submit" id="submitBtn" disabled>
+                        <i class="fas fa-paper-plane"></i> Submit
+                    </button>
+                    <a href="{% url 'cbt:student_staff_exam' %}" class="btn-cancel">
+                        <i class="fas fa-arrow-left"></i> Back to Exam
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const checkbox = document.getElementById('confirm');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    checkbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+    });
+</script>
+{% endblock %}

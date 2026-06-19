@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Exam Review - CBT Examination System{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        padding: clamp(12px, 3vw, 20px);
+    }
+    
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 clamp(8px, 3vw, 15px);
+    }
+    
+    h1 {
+        font-size: clamp(24px, 6vw, 32px);
+        margin-bottom: clamp(15px, 3vw, 20px);
+        word-break: break-word;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: clamp(15px, 3vw, 20px);
+    }
+    
+    .card-header {
+        padding: clamp(12px, 3vw, 15px);
+        font-size: clamp(14px, 3vw, 16px);
+        font-weight: 600;
+    }
+    
+    .card-header.bg-primary {
+        background-color: #0d6efd !important;
+    }
+    
+    .card-header.bg-success {
+        background-color: #198754 !important;
+    }
+    
+    .card-header.bg-danger {
+        background-color: #dc3545 !important;
+    }
+    
+    .card-header.text-white {
+        color: white !important;
+    }
+    
+    .float-end {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: clamp(12px, 2.5vw, 14px);
+    }
+    
+    .card-body {
+        padding: clamp(15px, 3vw, 20px);
+    }
+    
+    .card-body p {
+        margin-bottom: clamp(10px, 2vw, 15px);
+        font-size: clamp(13px, 3vw, 14px);
+        line-height: 1.5;
+        word-break: break-word;
+    }
+    
+    .card-body p strong {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .card-body p:last-child {
+        margin-bottom: 0;
+    }
+    
+    .badge {
+        font-size: clamp(11px, 2.5vw, 12px);
+        padding: clamp(4px, 1vw, 6px) clamp(6px, 2vw, 8px);
+        display: inline-block;
+    }
+    
+    .badge.bg-success {
+        background-color: #198754 !important;
+    }
+    
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+    }
+    
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -0.5rem;
+        margin-left: -0.5rem;
+    }
+    
+    .col-md-12,
+    .col-md-6 {
+        padding-right: 0.5rem;
+        padding-left: 0.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .col-md-6 {
+            width: 100%;
+            flex-basis: 100%;
+        }
+    }
+    
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: clamp(10px, 2.5vw, 12px) clamp(16px, 4vw, 20px);
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: clamp(13px, 3vw, 14px);
+        min-height: 44px;
+        text-decoration: none;
+        margin-top: clamp(15px, 3vw, 20px);
+        touch-action: manipulation;
+    }
+    
+    .btn-back:active {
+        transform: scale(0.95);
+    }
+    
+    .btn-back:hover {
+        background-color: #0056b3;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(13, 110, 253, 0.4);
+    }
+    
+    @media (max-width: 480px) {
+        .float-end {
+            display: block;
+            margin-top: 8px;
+        }
+        
+        .row {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Exam Review</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    Exam Details
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Student Name:</strong> {{ exam.student_name }}</p>
+                            <p><strong>Student ID:</strong> {{ exam.student_id }}</p>
+                            <p><strong>Exam:</strong> {{ exam.exam_config.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Score:</strong> {{ exam.score }}/{{ exam.total_questions }} ({{ exam.get_score_percentage }}%)</p>
+                            <p><strong>Status:</strong> 
+                                {% if exam.passed %}
+                                    <span class="badge bg-success">Passed</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Failed</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Date:</strong> {{ exam.start_time|date:"Y-m-d H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% for answer in answers %}
+            <div class="card mb-3">
+                <div class="card-header {% if answer.is_correct %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    Question {{ forloop.counter }}
+                    <span class="float-end">
+                        {% if answer.is_correct %}
+                            <i class="fas fa-check"></i> Correct
+                        {% else %}
+                            <i class="fas fa-times"></i> Incorrect
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p><strong>Question:</strong> {{ answer.question.text }}</p>
+                    <p><strong>Your Answer:</strong> {{ answer.selected_answer }}. 
+                        {% for letter, text in answer.question.get_all_options %}
+                            {% if letter == answer.selected_answer %}{{ text }}{% endif %}
+                        {% endfor %}
+                    </p>
+                    <p><strong>Correct Answer:</strong> {{ answer.question.correct_answer }}. 
+                        {% for letter, text in answer.question.get_all_options %}
+                            {% if letter == answer.question.correct_answer %}{{ text }}{% endif %}
+                        {% endfor %}
+                    </p>
+                    {% if answer.question.explanation %}
+                    <p><strong>Explanation:</strong> {{ answer.question.explanation }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <a href="{% url 'cbt:login' %}" class="btn-back">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
