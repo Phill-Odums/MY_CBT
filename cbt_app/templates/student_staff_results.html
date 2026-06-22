@@ -12,8 +12,9 @@
     
     .results-container {
         max-width: 900px;
-        margin: 0 auto;
-        padding: 0 20px;
+        margin: clamp(20px, 5vw, 40px) auto;
+        padding: clamp(12px, 4vw, 20px);
+        width: 100%;
     }
     
     .results-card {
@@ -112,7 +113,7 @@
     
     .detail-item {
         background: #f9f9f9;
-        padding: 15px;
+        padding: 15px;0T1S1V
         border-radius: 5px;
     }
     
@@ -276,28 +277,7 @@
                 </div>
             </div>
         </div>
-        
-        <div class="answers-section">
-            <h4><i class="fas fa-list-check"></i> Your Answers</h4>
-            
-            {% for answer in answers %}
-                <div class="answer-item {% if answer.is_correct %}correct{% else %}incorrect{% endif %}">
-                    <h5>
-                        Question {{ forloop.counter }}
-                        {% if answer.is_correct %}
-                            <span class="answer-badge badge-correct"><i class="fas fa-check"></i> Correct</span>
-                        {% else %}
-                            <span class="answer-badge badge-incorrect"><i class="fas fa-times"></i> Incorrect</span>
-                        {% endif %}
-                    </h5>
-                    <p><strong>Question:</strong> {{ answer.question.text }}</p>
-                    <p><strong>Your Answer:</strong> {{ answer.get_selected_answer_display }}</p>
-                    {% if not answer.is_correct %}
-                        <p><strong>Correct Answer:</strong> {{ answer.question.get_correct_answer_display }}</p>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        </div>
+
         
         <div class="button-section">
             <a href="{% url 'cbt:student_course_code' %}" class="btn-home">
