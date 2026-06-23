@@ -8,24 +8,80 @@
         background: #f5f5f5;
         padding: 0;
     }
-    
+
     .exam-wrapper {
         display: grid;
         grid-template-columns: 250px 1fr;
         min-height: 100vh;
     }
-    
+
+    /* ── Desktop sidebar ── */
     .exam-sidebar {
         background: linear-gradient(135deg, #4A5568);
         color: white;
         padding: 20px;
         overflow-y: auto;
     }
-    
+
+    /* ── Mobile top bar (hidden on desktop) ── */
+    .exam-topbar {
+        display: none;
+        background: #4A5568;
+        color: white;
+        padding: 10px 16px;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .topbar-timer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .topbar-timer-label {
+        font-size: 11px;
+        opacity: 0.8;
+    }
+
+    .topbar-timer-display {
+        font-size: 20px;
+        font-weight: bold;
+        font-family: monospace;
+    }
+
+    .topbar-timer-display.warning {
+        color: #ffcccb;
+    }
+
+    .topbar-progress {
+        flex: 1;
+    }
+
+    .topbar-progress-label {
+        font-size: 11px;
+        opacity: 0.8;
+        margin-bottom: 4px;
+    }
+
+    .topbar-progress-bar {
+        background: rgba(255,255,255,0.2);
+        height: 6px;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .topbar-progress-fill {
+        background: #0A6E0E;
+        height: 100%;
+        transition: width 0.3s;
+    }
+
     .exam-main {
         padding: 20px;
     }
-    
+
     .timer-box {
         background: rgba(255,255,255,0.1);
         padding: 15px;
@@ -33,45 +89,45 @@
         margin-bottom: 20px;
         text-align: center;
     }
-    
+
     .timer-label {
         font-size: 12px;
         opacity: 0.8;
         margin-bottom: 5px;
     }
-    
+
     .timer-display {
         font-size: 28px;
         font-weight: bold;
         font-family: monospace;
     }
-    
+
     .timer-display.warning {
         color: #ffcccb;
     }
-    
+
     .progress-box {
         margin-top: 20px;
     }
-    
+
     .progress-label {
         font-size: 12px;
         margin-bottom: 8px;
     }
-    
+
     .progress-bar {
         background: rgba(255,255,255,0.2);
         height: 8px;
         border-radius: 4px;
         overflow: hidden;
     }
-    
+
     .progress-fill {
         background: #0A6E0E;
         height: 100%;
         transition: width 0.3s;
     }
-    
+
     .question-card {
         background: white;
         border-radius: 8px;
@@ -80,13 +136,13 @@
         max-width: 800px;
         margin: 0 auto;
     }
-    
+
     .question-header {
         margin-bottom: 20px;
         padding-bottom: 15px;
         border-bottom: 2px solid #f0f0f0;
     }
-    
+
     .question-number {
         font-size: 12px;
         color: #999;
@@ -94,17 +150,17 @@
         text-transform: uppercase;
         margin-bottom: 5px;
     }
-    
+
     .question-text {
         font-size: 18px;
         color: #333;
         font-weight: 600;
     }
-    
+
     .options-group {
         margin: 30px 0;
     }
-    
+
     .option {
         display: flex;
         align-items: center;
@@ -116,25 +172,25 @@
         transition: all 0.3s;
         border: 2px solid transparent;
     }
-    
+
     .option:hover {
         background: #f0f7ff;
         border-color: #667eea;
     }
-    
+
     .option input[type="radio"] {
         margin-right: 15px;
         cursor: pointer;
         width: 18px;
         height: 18px;
     }
-    
+
     .option label {
         flex: 1;
         cursor: pointer;
         margin: 0;
     }
-    
+
     .question-actions {
         display: flex;
         gap: 10px;
@@ -142,7 +198,7 @@
         padding-top: 20px;
         border-top: 2px solid #f0f0f0;
     }
-    
+
     .btn-action {
         flex: 1;
         padding: 12px 20px;
@@ -153,65 +209,102 @@
         transition: all 0.3s;
         font-size: 14px;
     }
-    
+
     .btn-prev {
         background: #999;
         color: white;
     }
-    
-    .btn-prev:hover {
-        background: #888;
-    }
-    
+
+    .btn-prev:hover { background: #888; }
+
     .btn-next {
         background: #667eea;
         color: white;
     }
-    
-    .btn-next:hover {
-        background: #5568d3;
-    }
-    
+
+    .btn-next:hover { background: #5568d3; }
+
     .btn-submit {
         background: #0A6E0E;
         color: white;
     }
-    
-    .btn-submit:hover {
-        background: #085a0b;
-    }
-    
+
+    .btn-submit:hover { background: #085a0b; }
+
     .btn-action:disabled {
         opacity: 0.5;
         cursor: not-allowed;
     }
-    
+
+    /* ── Mobile: portrait ── */
     @media (max-width: 768px) {
         .exam-wrapper {
             grid-template-columns: 1fr;
         }
-        
+
+        /* Hide the desktop sidebar, show the top bar instead */
         .exam-sidebar {
             display: none;
         }
-        
+
+        .exam-topbar {
+            display: flex;
+        }
+
+        .exam-main {
+            padding: 12px;
+        }
+
         .question-card {
-            padding: 20px;
+            padding: 16px;
+        }
+
+        .question-text {
+            font-size: 16px;
+        }
+
+        .option {
+            padding: 12px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+
+<!-- Mobile top bar (portrait) -->
+<div class="exam-topbar">
+    <div class="topbar-timer">
+        <i class="fas fa-clock"></i>
+        <div>
+            <div class="topbar-timer-label">Time left</div>
+            <div class="topbar-timer-display {% if time_warning %}warning{% endif %}" id="timer-mobile">
+                {{ time_remaining }}
+            </div>
+        </div>
+    </div>
+    <div class="topbar-progress">
+        <div class="topbar-progress-label">
+            Question {{ current_index }} / {{ total_questions }}
+        </div>
+        <div class="topbar-progress-bar">
+            <div class="topbar-progress-fill" style="width: {{ progress_percentage }}%"></div>
+        </div>
+    </div>
+</div>
+
 <div class="exam-wrapper">
+    <!-- Desktop sidebar -->
     <div class="exam-sidebar">
         <h3 style="margin-top: 0;">{{ exam.course.course_name }}</h3>
-        
+
         <div class="timer-box {% if time_warning %}warning{% endif %}">
             <div class="timer-label"><i class="fas fa-clock"></i> Time Remaining</div>
-            <div class="timer-display {% if time_warning %}warning{% endif %}" id="timer">{{ time_remaining }}</div>
+            <div class="timer-display {% if time_warning %}warning{% endif %}" id="timer">
+                {{ time_remaining }}
+            </div>
         </div>
-        
+
         <div class="progress-box">
             <div class="progress-label">Progress: {{ current_index }}/{{ total_questions }}</div>
             <div class="progress-bar">
@@ -219,24 +312,25 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Main content -->
     <div class="exam-main">
         <div class="question-card">
             <form method="POST" novalidate>
                 {% csrf_token %}
-                
+
                 <div class="question-header">
                     <div class="question-number">Question {{ current_index }} of {{ total_questions }}</div>
                     <div class="question-text">{{ question.text }}</div>
                 </div>
-                
+
                 <div class="options-group">
                     {% for option_value, option_text in question.get_all_options %}
                         <div class="option">
-                            <input 
-                                type="radio" 
-                                id="option_{{ option_value }}" 
-                                name="selected_answer" 
+                            <input
+                                type="radio"
+                                id="option_{{ option_value }}"
+                                name="selected_answer"
                                 value="{{ option_value }}"
                                 {% if selected_answer == option_value %}checked{% endif %}
                                 required
@@ -247,7 +341,7 @@
                         </div>
                     {% endfor %}
                 </div>
-                
+
                 <div class="question-actions">
                     {% if show_previous %}
                         <button type="submit" name="previous" class="btn-action btn-prev">
@@ -258,7 +352,7 @@
                             <i class="fas fa-chevron-left"></i> Previous
                         </button>
                     {% endif %}
-                    
+
                     {% if show_next %}
                         <button type="submit" name="next" class="btn-action btn-next">
                             Next <i class="fas fa-chevron-right"></i>
@@ -279,29 +373,32 @@
     let parts = timeRemaining.split(':');
     let minutes = parseInt(parts[0]);
     let seconds = parseInt(parts[1]);
-    
+
     function updateTimer() {
-        const timerElement = document.getElementById('timer');
-        if (timerElement) {
-            timerElement.textContent = 
-                String(minutes).padStart(2, '0') + ':' + 
-                String(seconds).padStart(2, '0');
-        }
-        
+        // Update both desktop sidebar timer and mobile top bar timer
+        ['timer', 'timer-mobile'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent =
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0');
+            }
+        });
+
         seconds--;
         if (seconds < 0) {
             minutes--;
             seconds = 59;
         }
-        
+
         if (minutes < 0) {
             document.querySelector('form').submit();
             return;
         }
-        
+
         setTimeout(updateTimer, 1000);
     }
-    
+
     updateTimer();
 </script>
 {% endblock %}
