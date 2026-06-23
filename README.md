@@ -1,34 +1,137 @@
 # CBT Examination System - Django Version
 
-A fully-featured Computer-Based Testing (CBT) system built with Django, featuring:
-- Student login and exam management
-- Configurable exams with dynamic question loading
-- Real-time timer and progress tracking
-- Comprehensive admin panel for managing questions and exams
-- Automatic answer grading and results display
+A fully-featured Computer-Based Testing (CBT) system built with Django that enables schools, colleges, training centers, and educational institutions to conduct examinations digitally.
 
-## Features
+The system has evolved beyond a simple admin-managed CBT platform and now includes a **Multi-Staff Management System**, allowing staff users to independently manage courses, questions, students, and examination records without requiring access to the Django Admin panel.
 
-✅ **Admin Panel Integration**
-- Manage questions directly from Django admin
-- Add subjects, questions, and answer options
-- Configure exam settings and pass marks
-- View student exam records and scores
+---
 
-✅ **Student Features**
-- Simple login with name and ID
-- Clean, intuitive exam interface
-- Real-time countdown timer
-- Progress bar showing exam progress
-- Previous/Next navigation between questions
-- Auto-submit when time expires
+## Key Features
 
-✅ **Exam Management**
-- Multiple exam configurations
-- Random question selection
-- Configurable number of questions and time limits
-- Pass percentage settings
-- Detailed results with explanations
+### Student Features
+
+* Secure student login
+* Access examinations using assigned course codes
+* Clean and intuitive examination interface
+* Real-time countdown timer
+* Progress tracking and navigation
+* Previous/Next question navigation
+* Automatic submission when time expires
+* Instant grading and score computation
+* Detailed result breakdown
+* Exam review functionality
+
+### Staff Features (New)
+
+The system now supports multiple staff users who can independently manage examinations.
+
+Staff users can:
+
+* Register and login securely
+* Access a dedicated staff dashboard
+* Create and manage courses
+* Add examination questions
+* Edit existing questions
+* Delete questions
+* View assigned student examination records
+* Monitor student performance
+* Access examination review reports
+* Manage assessments without using Django Admin
+
+### Administrator Features
+
+* Full system administration through Django Admin
+* Manage staff and student records
+* Configure examination settings
+* Monitor system activities
+* Manage subjects and global configurations
+
+---
+
+## Multi-Staff Management System
+
+### Why This Update?
+
+Previously, all examination questions, courses, and student records were managed exclusively through Django Admin.
+
+This update introduces a decentralized management structure where multiple staff members can independently manage their own examination content.
+
+### Benefits
+
+* Reduced dependency on Django Admin
+* Improved scalability for schools and institutions
+* Better separation of responsibilities
+* Easier course and examination management
+* Enhanced security through role-based access
+
+### Staff Management Capabilities
+
+* Staff Registration
+* Staff Login
+* Staff Dashboard
+* Course Creation
+* Question Creation
+* Question Editing
+* Question Deletion
+* Student Exam Monitoring
+* Results Management
+
+---
+
+## Features Overview
+
+### Admin Panel Integration
+
+* Manage questions directly from Django Admin
+* Add subjects, questions, and answer options
+* Configure examination settings
+* Set pass marks and time limits
+* View student examination records and scores
+
+### Examination Management
+
+* Multiple exam configurations
+* Dynamic question loading
+* Randomized question selection
+* Configurable time limits
+* Pass percentage settings
+* Detailed result analysis
+* Examination review support
+
+### Real-Time Examination Experience
+
+* Countdown timer
+* Progress tracking
+* Question navigation
+* Auto-save capabilities
+* Auto-submit functionality
+
+---
+
+## Screens Included in the System
+
+### Student Pages
+
+* Login Page
+* Course Code Access Page
+* Examination Page
+* Submit Examination Page
+* Results Page
+* Examination Review Page
+
+### Staff Pages
+
+* Staff Registration
+* Staff Login
+* Staff Dashboard
+* Add Course
+* Add Question
+* Edit Question
+* Delete Question
+* Student Examination Monitoring
+* Student Results Dashboard
+
+---
 
 ## Installation
 
@@ -36,8 +139,12 @@ A fully-featured Computer-Based Testing (CBT) system built with Django, featurin
 
 ```bash
 python -m venv venv
-venv\Scripts\activate  # On Windows
-source venv/bin/activate  # On Linux/Mac
+
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
 ```
 
 ### Step 2: Install Dependencies
@@ -52,12 +159,11 @@ pip install -r requirements.txt
 python manage.py migrate
 ```
 
-### Step 4: Create Superuser (Admin Account)
+### Step 4: Create Superuser
 
 ```bash
 python manage.py createsuperuser
 ```
-Follow the prompts to create your admin account.
 
 ### Step 5: Run Development Server
 
@@ -65,169 +171,233 @@ Follow the prompts to create your admin account.
 python manage.py runserver
 ```
 
-The application will be available at `http://localhost:8000`
+Visit:
+
+```text
+http://localhost:8000
+```
+
+---
 
 ## Usage
 
-### Accessing the Admin Panel
+### Administrator Setup
 
-1. Go to `http://localhost:8000/admin/`
-2. Login with your superuser credentials
-3. Create subjects and questions
+1. Login to:
 
-### Setting Up Questions
+```text
+http://localhost:8000/admin/
+```
 
-1. **Create Subjects:**
-   - Click on "Subjects"
-   - Click "Add Subject"
-   - Enter name and description
+2. Create Subjects
 
-2. **Add Questions:**
-   - Click on "Questions"
-   - Click "Add Question"
-   - Fill in the question text, options, and correct answer
-   - Select difficulty and subject
-   - Add an explanation (optional)
+3. Configure Exams
 
-3. **Create Exam Configuration:**
-   - Click on "Exam Configurations"
-   - Click "Add Exam Configuration"
-   - Set the number of questions, time limit, and pass percentage
-   - Select which questions to include
-   - Mark as active
+4. Manage Global Settings
 
-### Student Taking an Exam
+### Staff Workflow
 
-1. Go to `http://localhost:8000/`
-2. Enter your name and student ID
-3. Click "START EXAM"
-4. Answer questions using Previous/Next buttons
-5. Review your answers before clicking "Submit Exam"
-6. View your results with detailed breakdown
+1. Register a Staff Account
+2. Login to Staff Portal
+3. Create Courses
+4. Add Examination Questions
+5. Manage Existing Questions
+6. Monitor Student Activity
+7. View Student Results
+
+### Student Workflow
+
+1. Access Homepage
+2. Enter Student Information
+3. Enter Course Code
+4. Take Examination
+5. Submit Answers
+6. View Results
+7. Review Examination
+
+---
 
 ## Project Structure
 
-```
+```text
 CBT_Django/
 ├── manage.py
 ├── requirements.txt
 ├── db.sqlite3
-├── cbt_project/          # Project settings
-│   ├── __init__.py
-│   ├── settings.py       # Django configuration
-│   ├── urls.py          # URL routing
+├── cbt_project/
+│   ├── settings.py
+│   ├── urls.py
 │   ├── wsgi.py
 │   └── asgi.py
-├── cbt_app/             # Main application
+│
+├── cbt_app/
 │   ├── migrations/
 │   ├── static/
-│   │   └── css/
-│   │       └── style.css
 │   ├── templates/
 │   │   ├── base.html
 │   │   ├── login.html
 │   │   ├── exam.html
 │   │   ├── submit_exam.html
 │   │   ├── results.html
-│   │   └── exam_review.html
-│   ├── __init__.py
-│   ├── admin.py         # Admin customization
-│   ├── apps.py
-│   ├── models.py        # Database models
-│   ├── views.py         # View logic
-│   ├── forms.py         # Form definitions
-│   └── urls.py          # App URL routing
+│   │   ├── exam_review.html
+│   │   ├── staff_dashboard.html
+│   │   ├── staff_login.html
+│   │   ├── staff_register.html
+│   │   ├── staff_add_question.html
+│   │   ├── staff_edit_question.html
+│   │   ├── staff_delete_question.html
+│   │   ├── staff_create_course.html
+│   │   ├── staff_course_detail.html
+│   │   ├── student_staff_exam.html
+│   │   ├── student_staff_results.html
+│   │   └── staff_student_exam_detail.html
+│   │
+│   ├── models.py
+│   ├── views.py
+│   ├── forms.py
+│   ├── urls.py
+│   └── admin.py
 ```
+
+---
 
 ## Database Models
 
 ### Subject
-- Stores exam subject categories
+
+Stores examination subject categories.
 
 ### Question
-- Stores multiple-choice questions
-- Fields: text, options (A-D), correct_answer, difficulty, explanation
+
+Stores multiple-choice questions.
+
+Fields:
+
+* Question Text
+* Option A
+* Option B
+* Option C
+* Option D
+* Correct Answer
+* Difficulty
+* Explanation
 
 ### ExamConfig
-- Configurable exam settings
-- Fields: name, total_questions, time_limit_minutes, pass_percentage
+
+Stores configurable examination settings.
+
+Fields:
+
+* Name
+* Number of Questions
+* Time Limit
+* Pass Percentage
 
 ### StudentExam
-- Records student exam sessions
-- Fields: student_name, student_id, status, score, passed
+
+Stores examination sessions.
+
+Fields:
+
+* Student Name
+* Student ID
+* Score
+* Status
+* Pass/Fail State
 
 ### StudentAnswer
-- Stores individual student answers
-- Fields: exam, question, selected_answer, is_correct
 
-## Admin Features
+Stores individual student responses.
 
-### Question Management
-- Add/Edit/Delete questions
-- Filter by subject, difficulty, and status
-- Search questions by text
-- Bulk operations for activation/deactivation
+### Staff
 
-### Exam Configuration
-- Create multiple exam setups
-- Associate questions with exams
-- Configure difficulty levels
+Stores staff user information and permissions.
 
-### Student Exam Records
-- View all student exams
-- Search by student name/ID
-- Filter by status and date
-- Readonly access to exam data
+### Course
 
-## Customization
+Stores course information assigned to staff members.
 
-### Styling
-Modify `cbt_app/static/css/style.css` to customize the appearance
-
-### Exam Duration
-Change `TIME_LIMIT` in `cbt_app/views.py` or configure via admin panel
-
-### Pass Mark
-Set pass percentage in the Exam Configuration admin panel
+---
 
 ## Security Notes
 
-⚠️ **For Production:**
-1. Change `SECRET_KEY` in `settings.py`
-2. Set `DEBUG = False`
-3. Configure `ALLOWED_HOSTS` with your domain
-4. Use a production database (PostgreSQL recommended)
-5. Set up HTTPS
-6. Use environment variables for sensitive data
+For production deployment:
+
+* Change SECRET_KEY
+* Set DEBUG = False
+* Configure ALLOWED_HOSTS
+* Use PostgreSQL
+* Configure HTTPS
+* Store secrets in environment variables
+* Enable secure session cookies
+
+---
 
 ## Troubleshooting
 
-### Database Issues
+### Database Synchronization
+
 ```bash
 python manage.py migrate --run-syncdb
 ```
 
 ### Clear Sessions
+
 ```bash
 python manage.py clearsessions
 ```
 
-### Create Backup
+### Backup Database
+
 ```bash
 python manage.py dumpdata > backup.json
 ```
 
-### Restore Backup
+### Restore Database
+
 ```bash
 python manage.py loaddata backup.json
 ```
 
-## Support
+---
 
-For issues or feature requests, please check the application logs:
-- Server logs appear in the terminal running the development server
-- Admin panel provides detailed question and exam management
+## Future Improvements
+
+* Excel Question Import
+* CSV Question Import
+* PDF Result Export
+* Email Notifications
+* Student Analytics Dashboard
+* REST API Integration
+* Mobile Responsive Enhancements
+* AI-Powered Question Generation
+* Online Proctoring Features
+
+---
+
+## Technologies Used
+
+* Python
+* Django
+* HTML5
+* CSS3
+* JavaScript
+* Bootstrap
+* SQLite (Development)
+* PostgreSQL (Production Recommended)
+
+---
+
+## Author
+
+**Phillip Odums**
+
+B.Sc. (Ed.) Mathematics / Computer Science
+
+Data Scientist | Machine Learning Engineer | Python Developer
+
+---
 
 ## License
 
-This CBT Examination System is provided as-is for educational purposes.
+This CBT Examination System is provided for educational and learning purposes. Feel free to modify and extend it for academic and institutional use.
