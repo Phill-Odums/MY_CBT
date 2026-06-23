@@ -400,4 +400,4 @@ Data Scientist | Machine Learning Engineer | Python Developer
 
 ## License
 
-This CBT Examination System is provided for educational and learning purposes. Feel free to modify and extend it for academic and institutional use.
+This CBT Examination System is provided for educational and learning purposes.
