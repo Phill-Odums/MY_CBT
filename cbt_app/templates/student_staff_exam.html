@@ -271,8 +271,6 @@
 {% endblock %}
 
 {% block content %}
-
-<!-- Mobile top bar (portrait) -->
 <div class="exam-topbar">
     <div class="topbar-timer">
         <i class="fas fa-clock"></i>
@@ -284,17 +282,16 @@
         </div>
     </div>
     <div class="topbar-progress">
-        <div class="topbar-progress-label">
-            Question {{ current_index }} / {{ total_questions }}
+        <div class="topbar-progress-label" id="progress-label-mobile">
+            Question 1 / {{ total_questions }}
         </div>
         <div class="topbar-progress-bar">
-            <div class="topbar-progress-fill" style="width: {{ progress_percentage }}%"></div>
+            <div class="topbar-progress-fill" style="width: 0%"></div>
         </div>
     </div>
 </div>
 
 <div class="exam-wrapper">
-    <!-- Desktop sidebar -->
     <div class="exam-sidebar">
         <h3 style="margin-top: 0;">{{ exam.course.course_name }}</h3>
 
@@ -306,99 +303,166 @@
         </div>
 
         <div class="progress-box">
-            <div class="progress-label">Progress: {{ current_index }}/{{ total_questions }}</div>
+            <div class="progress-label" id="progress-label">Progress: 1/{{ total_questions }}</div>
             <div class="progress-bar">
-                <div class="progress-fill" style="width: {{ progress_percentage }}%"></div>
+                <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
             </div>
         </div>
     </div>
 
-    <!-- Main content -->
     <div class="exam-main">
         <div class="question-card">
-            <form method="POST" novalidate>
-                {% csrf_token %}
+            <div class="question-header">
+                <div id="question-number" class="question-number"></div>
+                <div id="question-text" class="question-text"></div>
+            </div>
 
-                <div class="question-header">
-                    <div class="question-number">Question {{ current_index }} of {{ total_questions }}</div>
-                    <div class="question-text">{{ question.text }}</div>
-                </div>
+            <div id="options-group" class="options-group"></div>
 
-                <div class="options-group">
-                    {% for option_value, option_text in question.get_all_options %}
-                        <div class="option">
-                            <input
-                                type="radio"
-                                id="option_{{ option_value }}"
-                                name="selected_answer"
-                                value="{{ option_value }}"
-                                {% if selected_answer == option_value %}checked{% endif %}
-                                required
-                            >
-                            <label for="option_{{ option_value }}">
-                                <strong>{{ option_value }}.</strong> {{ option_text }}
-                            </label>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <div class="question-actions">
-                    {% if show_previous %}
-                        <button type="submit" name="previous" class="btn-action btn-prev">
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </button>
-                    {% else %}
-                        <button type="button" class="btn-action btn-prev" disabled>
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </button>
-                    {% endif %}
-
-                    {% if show_next %}
-                        <button type="submit" name="next" class="btn-action btn-next">
-                            Next <i class="fas fa-chevron-right"></i>
-                        </button>
-                    {% else %}
-                        <button type="submit" name="submit" class="btn-action btn-submit">
-                            <i class="fas fa-check-circle"></i> Submit Exam
-                        </button>
-                    {% endif %}
-                </div>
-            </form>
+            <div class="question-actions">
+                <button type="button" id="previous-btn" class="btn-action btn-prev" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <button type="button" id="next-btn" class="btn-action btn-next">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
+<form id="submit-form" method="POST" action="{{ submit_url }}">
+    {% csrf_token %}
+    <input type="hidden" name="confirm" value="on">
+</form>
+
 <script>
-    let timeRemaining = "{{ time_remaining }}";
-    let parts = timeRemaining.split(':');
-    let minutes = parseInt(parts[0]);
-    let seconds = parseInt(parts[1]);
+    const questions = {{ question_payload|safe }};
+    const saveAnswerUrl = '{{ save_answer_url }}';
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
 
-    function updateTimer() {
-        // Update both desktop sidebar timer and mobile top bar timer
-        ['timer', 'timer-mobile'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.textContent =
-                    String(minutes).padStart(2, '0') + ':' +
-                    String(seconds).padStart(2, '0');
-            }
-        });
+    const state = {
+        currentIndex: 0,
+        answers: Object.fromEntries(questions.map(question => [question.id, question.selected_answer || null]))
+    };
 
-        seconds--;
-        if (seconds < 0) {
-            minutes--;
-            seconds = 59;
-        }
+    function updateProgress() {
+        const current = state.currentIndex + 1;
+        document.getElementById('progress-label').textContent = `Progress: ${current}/${questions.length}`;
+        document.getElementById('progress-label-mobile').textContent = `Question ${current} / ${questions.length}`;
+        const percent = questions.length ? (current / questions.length) * 100 : 0;
+        document.getElementById('progress-fill').style.width = `${percent}%`;
+    }
 
-        if (minutes < 0) {
-            document.querySelector('form').submit();
+    function renderQuestion() {
+        const question = questions[state.currentIndex];
+        if (!question) {
             return;
         }
 
-        setTimeout(updateTimer, 1000);
+        document.getElementById('question-number').textContent = `Question ${state.currentIndex + 1} of ${questions.length}`;
+        document.getElementById('question-text').textContent = question.text;
+
+        const optionsContainer = document.getElementById('options-group');
+        optionsContainer.innerHTML = '';
+
+        question.options.forEach(option => {
+            const optionEl = document.createElement('div');
+            optionEl.className = 'option';
+
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.id = `option_${question.id}_${option.value}`;
+            input.name = `selected_answer_${question.id}`;
+            input.value = option.value;
+            input.required = true;
+            if (state.answers[question.id] === option.value) {
+                input.checked = true;
+            }
+
+            input.addEventListener('change', () => {
+                state.answers[question.id] = option.value;
+                saveCurrentAnswer();
+            });
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.innerHTML = `<strong>${option.value}.</strong> ${option.text}`;
+
+            optionEl.appendChild(input);
+            optionEl.appendChild(label);
+            optionsContainer.appendChild(optionEl);
+        });
+
+        document.getElementById('previous-btn').disabled = state.currentIndex === 0;
+        document.getElementById('next-btn').textContent = state.currentIndex >= questions.length - 1 ? 'Submit Exam' : 'Next';
+        updateProgress();
     }
 
+    function saveCurrentAnswer() {
+        const question = questions[state.currentIndex];
+        const selectedAnswer = state.answers[question.id];
+        if (!selectedAnswer) {
+            return Promise.resolve();
+        }
+
+        return fetch(saveAnswerUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({
+                question_id: question.id,
+                selected_answer: selectedAnswer
+            }),
+            credentials: 'same-origin'
+        });
+    }
+
+    document.getElementById('previous-btn').addEventListener('click', () => {
+        if (state.currentIndex > 0) {
+            saveCurrentAnswer().finally(() => {
+                state.currentIndex -= 1;
+                renderQuestion();
+            });
+        }
+    });
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+        if (state.currentIndex < questions.length - 1) {
+            saveCurrentAnswer().finally(() => {
+                state.currentIndex += 1;
+                renderQuestion();
+            });
+        } else {
+            saveCurrentAnswer().finally(() => {
+                document.getElementById('submit-form').submit();
+            });
+        }
+    });
+
+    function updateTimer() {
+        fetch('{% url "cbt:exam_progress" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.time_expired) {
+                    document.getElementById('submit-form').submit();
+                } else {
+                    const timer = document.getElementById('timer');
+                    const timerMobile = document.getElementById('timer-mobile');
+                    [timer, timerMobile].forEach(el => {
+                        if (el) {
+                            el.textContent = data.time_remaining;
+                        }
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    renderQuestion();
     updateTimer();
+    setInterval(updateTimer, 1000);
 </script>
 {% endblock %}

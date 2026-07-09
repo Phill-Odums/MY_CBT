@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from datetime import timedelta
+import json
 import random
 
 from .models import (
@@ -17,6 +18,56 @@ from .forms import (
     StudentLoginForm, ExamAnswerForm, ExamSubmissionForm, CourseCodeForm,
     StaffRegistrationForm, StaffCourseForm, StaffQuestionForm
 )
+
+# Frontend rendering map
+# Each view below renders a specific HTML template and is linked through cbt_app/urls.py.
+# Template location: cbt_app/templates/
+# - login_view -> login.html (route: /login/)
+# - exam_view -> exam.html (route: /exam/)
+# - submit_exam_view -> submit_exam.html (route: /submit/)
+# - results_view -> results.html (route: /results/<exam_id>/)
+# - staff_login_view -> staff_login.html (route: /staff/login/)
+# - staff_dashboard_view -> staff_dashboard.html (route: /staff/dashboard/)
+# - staff_course_detail_view -> staff_course_detail.html (route: /staff/course/<course_id>/)
+# - student_course_code_view -> student_course_code.html (route: /course/code/)
+# - student_staff_exam_view -> student_staff_exam.html (route: /course/exam/)
+#
+# To add a new frontend page:
+# 1. Create the HTML file in cbt_app/templates/.
+# 2. Add a view function here that renders that template.
+# 3. Register the URL in cbt_app/urls.py.
+# 4. Link to it from another template with {% url 'cbt:route_name' %}.
+# 5. Use reverse('cbt:route_name') inside Python views when redirecting.
+
+
+def build_question_payload(question_objects, saved_answers=None):
+    """Build a JSON-friendly payload for client-side exam rendering."""
+    saved_answers = saved_answers or {}
+    payload = []
+
+    for question in question_objects:
+        option_pairs = []
+        if hasattr(question, 'get_all_options'):
+            option_pairs = question.get_all_options()
+        else:
+            option_pairs = [
+                ('A', getattr(question, 'option_a', '')),
+                ('B', getattr(question, 'option_b', '')),
+                ('C', getattr(question, 'option_c', '')),
+                ('D', getattr(question, 'option_d', '')),
+            ]
+
+        payload.append({
+            'id': question.id,
+            'text': question.text,
+            'selected_answer': saved_answers.get(question.id),
+            'options': [
+                {'value': option_letter, 'text': option_text}
+                for option_letter, option_text in option_pairs
+            ],
+        })
+
+    return payload
 
 
 # ==========================================
@@ -94,9 +145,12 @@ def login_view(request):
                 min(exam_config.total_questions, len(available_questions))
             )
 
-            # Store question IDs in session
+            # Store selected question IDs for later grading and replay
             request.session['question_ids'] = [q.id for q in selected_questions]
             request.session['current_question_index'] = 0
+
+            exam.total_questions = len(selected_questions)
+            exam.save(update_fields=['total_questions'])
 
             return redirect('cbt:exam')
     else:
@@ -140,66 +194,44 @@ def exam_view(request):
             # Auto-submit exam
             return redirect('cbt:submit_exam')
 
-    # Get current question
     question_ids = request.session.get('question_ids', [])
-    current_index = request.session.get('current_question_index', 0)
-
-    if current_index >= len(question_ids):
+    if not question_ids:
         return redirect('cbt:submit_exam')
 
-    current_question_id = question_ids[current_index]
-    question = get_object_or_404(Question, id=current_question_id)
+    questions = list(Question.objects.filter(id__in=question_ids, is_active=True))
+    ordered_questions = {question.id: question for question in questions}
+    questions = [ordered_questions[question_id] for question_id in question_ids if question_id in ordered_questions]
 
-    # Get or create answer for this question
-    answer, created = StudentAnswer.objects.get_or_create(
-        exam=exam,
-        question=question,
-        defaults={'selected_answer': 'A'}
+    if not questions:
+        return redirect('cbt:submit_exam')
+
+    saved_answers = dict(
+        StudentAnswer.objects.filter(exam=exam, question__in=questions).values_list('question_id', 'selected_answer')
     )
+    question_payload = build_question_payload(questions, saved_answers)
 
-    if request.method == 'POST':
-        form = ExamAnswerForm(request.POST, instance=answer)
-        if form.is_valid():
-            form.save()
-            
-            # Move to next question
-            if 'next' in request.POST:
-                request.session['current_question_index'] = current_index + 1
-                return redirect('cbt:exam')
-            elif 'previous' in request.POST and current_index > 0:
-                request.session['current_question_index'] = current_index - 1
-                return redirect('cbt:exam')
-            elif 'submit' in request.POST:
-                return redirect('cbt:submit_exam')
-    else:
-        form = ExamAnswerForm(instance=answer)
-
-    # Calculate time remaining
     start_time = timezone.datetime.fromisoformat(request.session['exam_start_time'])
     time_limit = timedelta(minutes=request.session['time_limit_minutes'])
     elapsed = timezone.now() - start_time
     time_remaining = time_limit - elapsed
-    
+
     minutes = max(0, int(time_remaining.total_seconds()) // 60)
     seconds = max(0, int(time_remaining.total_seconds()) % 60)
-
-    # Check if time is running out
-    time_warning = time_remaining.total_seconds() < 300  # less than 5 minutes
+    time_warning = time_remaining.total_seconds() < 300
 
     context = {
         'exam': exam,
-        'question': question,
-        'form': form,
-        'current_index': current_index + 1,  # 1-based for display
+        'question_payload': json.dumps(question_payload),
         'total_questions': len(question_ids),
-        'progress_percentage': (current_index / len(question_ids)) * 100,
+        'progress_percentage': 0,
         'time_remaining': f"{minutes:02d}:{seconds:02d}",
         'time_warning': time_warning,
-        'show_previous': current_index > 0,
-        'show_next': current_index < len(question_ids) - 1,
+        'save_answer_url': reverse('cbt:save_exam_answer'),
+        'submit_url': reverse('cbt:submit_exam'),
+        'exam_id': exam.id,
     }
 
-    return render(request, 'exam.html', context)
+    return render(request, 'exam.html', context)  
 
 
 def get_exam_progress(request):
@@ -210,9 +242,7 @@ def get_exam_progress(request):
     exam_id = request.session.get('exam_id')
     exam = get_object_or_404(StudentExam, id=exam_id)
     question_ids = request.session.get('question_ids', [])
-    current_index = request.session.get('current_question_index', 0)
 
-    # Calculate time remaining
     start_time = timezone.datetime.fromisoformat(request.session['exam_start_time'])
     time_limit = timedelta(minutes=request.session['time_limit_minutes'])
     elapsed = timezone.now() - start_time
@@ -229,10 +259,56 @@ def get_exam_progress(request):
 
     return JsonResponse({
         'time_remaining': f"{minutes:02d}:{seconds:02d}",
-        'current_question': current_index + 1,
+        'current_question': 1,
         'total_questions': len(question_ids),
-        'progress': (current_index / len(question_ids)) * 100 if question_ids else 0
+        'progress': 0 if not question_ids else 0
     })
+
+
+@require_POST
+def save_exam_answer_view(request):
+    """Persist a student's selected answer to the server."""
+    if 'exam_id' not in request.session:
+        return JsonResponse({'error': 'No active exam'}, status=400)
+
+    exam_id = request.session.get('exam_id')
+    exam = get_object_or_404(StudentExam, id=exam_id)
+
+    question_id = request.POST.get('question_id')
+    selected_answer = request.POST.get('selected_answer')
+
+    if not question_id or selected_answer not in dict(Question.ANSWER_CHOICES):
+        return JsonResponse({'error': 'Invalid answer payload'}, status=400)
+
+    question = get_object_or_404(Question, id=question_id)
+    answer, _ = StudentAnswer.objects.get_or_create(exam=exam, question=question)
+    answer.selected_answer = selected_answer
+    answer.save(update_fields=['selected_answer'])
+
+    return JsonResponse({'status': 'saved'})
+
+
+@require_POST
+def save_staff_exam_answer_view(request):
+    """Persist a student's staff-course selected answer to the server."""
+    if 'staff_exam_id' not in request.session:
+        return JsonResponse({'error': 'No active exam'}, status=400)
+
+    exam_id = request.session.get('staff_exam_id')
+    exam = get_object_or_404(StaffStudentExam, id=exam_id)
+
+    question_id = request.POST.get('question_id')
+    selected_answer = request.POST.get('selected_answer')
+
+    if not question_id or selected_answer not in dict(StaffQuestion.ANSWER_CHOICES):
+        return JsonResponse({'error': 'Invalid answer payload'}, status=400)
+
+    question = get_object_or_404(StaffQuestion, id=question_id)
+    answer, _ = StaffStudentAnswer.objects.get_or_create(exam=exam, question=question)
+    answer.selected_answer = selected_answer
+    answer.save(update_fields=['selected_answer'])
+
+    return JsonResponse({'status': 'saved'})
 
 
 # ==========================================
@@ -254,28 +330,27 @@ def submit_exam_view(request):
     if request.method == 'POST':
         form = ExamSubmissionForm(request.POST)
         if form.is_valid():
-            # Grade the exam
-            answers = StudentAnswer.objects.filter(exam=exam)
+            question_ids = request.session.get('question_ids', [])
             correct_count = 0
 
-            for answer in answers:
-                answer.check_answer()
-                answer.save()
-                if answer.is_correct:
-                    correct_count += 1
+            for question_id in question_ids:
+                answer = StudentAnswer.objects.filter(exam=exam, question_id=question_id).first()
+                if answer:
+                    answer.check_answer()
+                    answer.save()
+                    if answer.is_correct:
+                        correct_count += 1
 
             exam.score = correct_count
             exam.end_time = timezone.now()
             exam.status = 'graded'
 
-            # Determine if passed
             pass_percentage = exam.exam_config.pass_percentage
-            score_percentage = (correct_count / exam.total_questions) * 100
+            score_percentage = (correct_count / exam.total_questions) * 100 if exam.total_questions else 0
             exam.passed = score_percentage >= pass_percentage
 
             exam.save()
 
-            # Clear session
             request.session.flush()
 
             return redirect('cbt:results', exam_id=exam_id)
@@ -625,7 +700,7 @@ def student_staff_course_login_view(request):
         'form': form,
         'course': course,
     }
-    return render(request, 'student_staff_course_login.html', context)
+    return render(request, 'student_staff_course_login.html', context) 
 
 
 def student_staff_exam_view(request):
@@ -636,7 +711,6 @@ def student_staff_exam_view(request):
     exam_id = request.session.get('staff_exam_id')
     exam = get_object_or_404(StaffStudentExam, id=exam_id)
 
-    # Check if exam time has expired
     if exam.status == 'in_progress':
         start_time = timezone.datetime.fromisoformat(request.session['staff_exam_start_time'])
         time_limit = timedelta(minutes=exam.course.time_limit_minutes)
@@ -645,62 +719,41 @@ def student_staff_exam_view(request):
         if elapsed > time_limit:
             return redirect('cbt:student_staff_submit_exam')
 
-    # Get current question
     question_ids = request.session.get('staff_question_ids', [])
-    current_index = request.session.get('staff_current_question_index', 0)
-
-    if current_index >= len(question_ids):
+    if not question_ids:
         return redirect('cbt:student_staff_submit_exam')
 
-    current_question_id = question_ids[current_index]
-    question = get_object_or_404(StaffQuestion, id=current_question_id)
+    questions = list(StaffQuestion.objects.filter(id__in=question_ids, is_active=True))
+    ordered_questions = {question.id: question for question in questions}
+    questions = [ordered_questions[question_id] for question_id in question_ids if question_id in ordered_questions]
 
-    # Get or create answer for this question
-    answer, created = StaffStudentAnswer.objects.get_or_create(
-        exam=exam,
-        question=question,
-        defaults={'selected_answer': 'A'}
+    if not questions:
+        return redirect('cbt:student_staff_submit_exam')
+
+    saved_answers = dict(
+        StaffStudentAnswer.objects.filter(exam=exam, question__in=questions).values_list('question_id', 'selected_answer')
     )
+    question_payload = build_question_payload(questions, saved_answers)
 
-    if request.method == 'POST':
-        # Handle answer form
-        selected = request.POST.get('selected_answer')
-        if selected in ['A', 'B', 'C', 'D']:
-            answer.selected_answer = selected
-            answer.save()
-
-            # Move to next question
-            if 'next' in request.POST:
-                request.session['staff_current_question_index'] = current_index + 1
-                return redirect('cbt:student_staff_exam')
-            elif 'previous' in request.POST and current_index > 0:
-                request.session['staff_current_question_index'] = current_index - 1
-                return redirect('cbt:student_staff_exam')
-            elif 'submit' in request.POST:
-                return redirect('cbt:student_staff_submit_exam')
-
-    # Calculate time remaining
     start_time = timezone.datetime.fromisoformat(request.session['staff_exam_start_time'])
     time_limit = timedelta(minutes=exam.course.time_limit_minutes)
     elapsed = timezone.now() - start_time
     time_remaining = time_limit - elapsed
-    
+
     minutes = max(0, int(time_remaining.total_seconds()) // 60)
     seconds = max(0, int(time_remaining.total_seconds()) % 60)
-
     time_warning = time_remaining.total_seconds() < 300
 
     context = {
         'exam': exam,
-        'question': question,
-        'current_index': current_index + 1,
+        'question_payload': json.dumps(question_payload),
         'total_questions': len(question_ids),
-        'progress_percentage': (current_index / len(question_ids)) * 100,
+        'progress_percentage': 0,
         'time_remaining': f"{minutes:02d}:{seconds:02d}",
         'time_warning': time_warning,
-        'show_previous': current_index > 0,
-        'show_next': current_index < len(question_ids) - 1,
-        'selected_answer': answer.selected_answer,
+        'save_answer_url': reverse('cbt:save_staff_exam_answer'),
+        'submit_url': reverse('cbt:student_staff_submit_exam'),
+        'exam_id': exam.id,
     }
 
     return render(request, 'student_staff_exam.html', context)

@@ -131,6 +131,19 @@ This update introduces a decentralized management structure where multiple staff
 * Student Examination Monitoring
 * Student Results Dashboard
 
+### Frontend Page Reference
+
+A complete reference for all rendered frontend templates, routes, and instructions for linking a new page is available in [FRONTEND_PAGES_AND_LINKS.md](FRONTEND_PAGES_AND_LINKS.md).
+
+For full developer guidance, including route mapping, codebase structure, and the reusable password policy, see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md).
+
+Use that file whenever you want to:
+
+* locate the template behind a page
+* find the route name used by a page
+* add a new HTML page and connect it to Django
+* link a new frontend page to an existing view or template
+
 ---
 
 ## Installation

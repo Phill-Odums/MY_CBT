@@ -308,7 +308,6 @@
 
 {% block content %}
 <div class="exam-container">
-    <!-- Header with Timer -->
     <div class="exam-header">
         <div class="header-content">
             <div class="student-info">
@@ -320,84 +319,157 @@
             </div>
             <div class="timer-section">
                 <div class="timer-label">TIME REMAINING</div>
-                <div id="timer" class="timer-display">
-                    {{ time_remaining }}
-                </div>
+                <div id="timer" class="timer-display">{{ time_remaining }}</div>
             </div>
         </div>
     </div>
 
-    <!-- Progress Bar -->
     <div class="progress-section">
-        <div class="progress-label">Question {{ current_index }} of {{ total_questions }}</div>
+        <div class="progress-label" id="progress-label">Question 1 of {{ total_questions }}</div>
         <div class="progress">
-            <div class="progress-bar" style="width: {{ progress_percentage }}%"></div>
+            <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
         </div>
     </div>
 
-    <!-- Question Card -->
     <div class="exam-body">
-        <form method="POST" id="exam-form">
-            {% csrf_token %}
-            <div class="question-card">
-                <div class="question-number">Question {{ current_index }} of {{ total_questions }}</div>
-                <div class="question-text">{{ question.text }}</div>
-                
-                <div class="options-container">
-                    {% for option_letter, option_text in question.get_all_options %}
-                    <label class="option-row">
-                        <input type="radio" 
-                               name="selected_answer" 
-                               value="{{ option_letter }}"
-                               {% if form.selected_answer.value == option_letter %}checked{% endif %}
-                               required>
-                        <label style="margin-left: 10px;">
-                            <strong>{{ option_letter }}.</strong> {{ option_text }}
-                        </label>
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-        </form>
+        <div class="question-card">
+            <div id="question-number" class="question-number"></div>
+            <div id="question-text" class="question-text"></div>
+            <div id="options-container" class="options-container"></div>
+        </div>
     </div>
 
-    <!-- Navigation Buttons -->
     <div class="exam-footer">
         <div class="nav-buttons">
-            <button type="submit" form="exam-form" name="previous" class="btn btn-nav btn-previous" 
-                    {% if not show_previous %}disabled{% endif %}>
-                ← Previous
-            </button>
-            <button type="submit" form="exam-form" name="next" class="btn btn-nav btn-next" 
-                    {% if not show_next %}disabled{% endif %}>
-                Next →
-            </button>
+            <button type="button" id="previous-btn" class="btn btn-nav btn-previous" disabled>← Previous</button>
+            <button type="button" id="next-btn" class="btn btn-nav btn-next">Next →</button>
         </div>
-        <button type="submit" form="exam-form" name="submit" class="btn btn-nav btn-submit">
-            <i class="fas fa-check"></i> Submit Exam
-        </button>
+        <form id="submit-form" method="POST" action="{{ submit_url }}">
+            {% csrf_token %}
+            <input type="hidden" name="confirm" value="on">
+            <button type="submit" class="btn btn-nav btn-submit">
+                <i class="fas fa-check"></i> Submit Exam
+            </button>
+        </form>
     </div>
 </div>
 
 <script>
-    // Real-time timer update
+    const questions = {{ question_payload|safe }};
+    const saveAnswerUrl = '{{ save_answer_url }}';
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
+
+    const state = {
+        currentIndex: 0,
+        answers: Object.fromEntries(questions.map(question => [question.id, question.selected_answer || null]))
+    };
+
+    function updateProgress() {
+        const label = document.getElementById('progress-label');
+        const bar = document.getElementById('progress-bar');
+        const current = state.currentIndex + 1;
+        label.textContent = `Question ${current} of ${questions.length}`;
+        bar.style.width = `${(current / questions.length) * 100}%`;
+    }
+
+    function renderQuestion() {
+        const question = questions[state.currentIndex];
+        if (!question) {
+            return;
+        }
+
+        document.getElementById('question-number').textContent = `Question ${state.currentIndex + 1} of ${questions.length}`;
+        document.getElementById('question-text').textContent = question.text;
+
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+
+        question.options.forEach(option => {
+            const row = document.createElement('label');
+            row.className = 'option-row';
+
+            const input = document.createElement('input');
+            input.type = 'radio';
+            input.name = `selected_answer_${question.id}`;
+            input.value = option.value;
+            input.required = true;
+            if (state.answers[question.id] === option.value) {
+                input.checked = true;
+            }
+
+            input.addEventListener('change', () => {
+                state.answers[question.id] = option.value;
+                saveCurrentAnswer();
+            });
+
+            const label = document.createElement('label');
+            label.style.marginLeft = '10px';
+            label.innerHTML = `<strong>${option.value}.</strong> ${option.text}`;
+
+            row.appendChild(input);
+            row.appendChild(label);
+            optionsContainer.appendChild(row);
+        });
+
+        document.getElementById('previous-btn').disabled = state.currentIndex === 0;
+        document.getElementById('next-btn').disabled = state.currentIndex >= questions.length - 1;
+        updateProgress();
+    }
+
+    function saveCurrentAnswer() {
+        const question = questions[state.currentIndex];
+        const selectedAnswer = state.answers[question.id];
+        if (!selectedAnswer) {
+            return Promise.resolve();
+        }
+
+        return fetch(saveAnswerUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                'X-CSRFToken': csrfToken
+            },
+            body: new URLSearchParams({
+                question_id: question.id,
+                selected_answer: selectedAnswer
+            }),
+            credentials: 'same-origin'
+        });
+    }
+
+    document.getElementById('previous-btn').addEventListener('click', () => {
+        if (state.currentIndex > 0) {
+            saveCurrentAnswer().finally(() => {
+                state.currentIndex -= 1;
+                renderQuestion();
+            });
+        }
+    });
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+        if (state.currentIndex < questions.length - 1) {
+            saveCurrentAnswer().finally(() => {
+                state.currentIndex += 1;
+                renderQuestion();
+            });
+        }
+    });
+
     function updateTimer() {
         fetch('{% url "cbt:exam_progress" %}')
             .then(response => response.json())
             .then(data => {
                 if (data.time_expired) {
-                    // Auto-submit if time expired
-                    document.getElementById('exam-form').submit();
+                    document.getElementById('submit-form').submit();
                 } else {
                     const timer = document.getElementById('timer');
                     timer.textContent = data.time_remaining;
-                    
-                    // Change color based on remaining time
+
                     const parts = data.time_remaining.split(':');
-                    const minutes = parseInt(parts[0]);
-                    const seconds = parseInt(parts[1]);
+                    const minutes = parseInt(parts[0], 10);
+                    const seconds = parseInt(parts[1], 10);
                     const totalSeconds = minutes * 60 + seconds;
-                    
+
                     timer.classList.remove('warning', 'danger');
                     if (totalSeconds < 60) {
                         timer.classList.add('danger');
@@ -408,15 +480,9 @@
             })
             .catch(error => console.error('Error:', error));
     }
-    
-    // Update timer every second
+
     setInterval(updateTimer, 1000);
-    
-    // Auto-save answer on change
-    document.querySelectorAll('input[name="selected_answer"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            console.log('Answer selected: ' + this.value);
-        });
-    });
+    renderQuestion();
+    updateTimer();
 </script>
 {% endblock %}

@@ -1,5 +1,25 @@
+import re
+
 from django import forms
+from django.core.exceptions import ValidationError
 from .models import StudentAnswer, StudentExam, Question, StaffProfile, StaffCourse, StaffQuestion
+
+
+def validate_password_strength(value):
+    """Ensure a password is strong enough for staff or student account creation."""
+    if len(value) < 8 or len(value) > 16:
+        raise ValidationError("Password must be 8 to 16 characters long and include at least one uppercase letter, one number, and one symbol.")
+
+    if not re.search(r'[A-Z]', value):
+        raise ValidationError("Password must be 8 to 16 characters long and include at least one uppercase letter, one number, and one symbol.")
+
+    if not re.search(r'\d', value):
+        raise ValidationError("Password must be 8 to 16 characters long and include at least one uppercase letter, one number, and one symbol.")
+
+    if not re.search(r'[^A-Za-z0-9]', value):
+        raise ValidationError("Password must be 8 to 16 characters long and include at least one uppercase letter, one number, and one symbol.")
+
+    return value
 
 
 class StudentLoginForm(forms.Form):
@@ -123,7 +143,8 @@ class StaffRegistrationForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'placeholder': 'Password'
-        })
+        }),
+        validators=[validate_password_strength]
     )
     password_confirm = forms.CharField(
         widget=forms.PasswordInput(attrs={
@@ -163,6 +184,10 @@ class StaffRegistrationForm(forms.ModelForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("This email is already registered.")
         return email
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password', '')
+        return validate_password_strength(password)
 
     def clean(self):
         cleaned_data = super().clean()

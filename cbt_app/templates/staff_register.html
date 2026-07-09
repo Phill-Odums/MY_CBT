@@ -215,6 +215,7 @@
                 <div class="form-group">
                     <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
                     {{ form.password }}
+                    <small class="text-muted d-block mt-1">Use 8-16 characters with at least one uppercase letter, one number, and one symbol.</small>
                     {% if form.password.errors %}
                         <div class="errorlist">
                             {% for error in form.password.errors %}
