@@ -347,6 +347,7 @@
         <form id="submit-form" method="POST" action="{{ submit_url }}">
             {% csrf_token %}
             <input type="hidden" name="confirm" value="on">
+            <input type="hidden" name="answers_payload" id="answers-payload" value="{}">
             <button type="submit" class="btn btn-nav btn-submit">
                 <i class="fas fa-check"></i> Submit Exam
             </button>
@@ -370,6 +371,11 @@
         const current = state.currentIndex + 1;
         label.textContent = `Question ${current} of ${questions.length}`;
         bar.style.width = `${(current / questions.length) * 100}%`;
+    }
+
+    function syncAnswersPayload() {
+        const payload = JSON.stringify(state.answers);
+        document.getElementById('answers-payload').value = payload;
     }
 
     function renderQuestion() {
@@ -399,6 +405,7 @@
 
             input.addEventListener('change', () => {
                 state.answers[question.id] = option.value;
+                syncAnswersPayload();
                 saveCurrentAnswer();
             });
 
@@ -455,26 +462,37 @@
         }
     });
 
+    document.getElementById('submit-form').addEventListener('submit', () => {
+        syncAnswersPayload();
+    });
+
     function updateTimer() {
-        fetch('{% url "cbt:exam_progress" %}')
+        fetch('{% url "cbt:exam_progress" %}', {
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            credentials: 'same-origin'
+        })
             .then(response => response.json())
             .then(data => {
                 if (data.time_expired) {
                     document.getElementById('submit-form').submit();
                 } else {
                     const timer = document.getElementById('timer');
-                    timer.textContent = data.time_remaining;
+                    if (timer) {
+                        timer.textContent = data.time_remaining;
 
-                    const parts = data.time_remaining.split(':');
-                    const minutes = parseInt(parts[0], 10);
-                    const seconds = parseInt(parts[1], 10);
-                    const totalSeconds = minutes * 60 + seconds;
+                        const parts = data.time_remaining.split(':');
+                        const minutes = parseInt(parts[0], 10);
+                        const seconds = parseInt(parts[1], 10);
+                        const totalSeconds = minutes * 60 + seconds;
 
-                    timer.classList.remove('warning', 'danger');
-                    if (totalSeconds < 60) {
-                        timer.classList.add('danger');
-                    } else if (totalSeconds < 300) {
-                        timer.classList.add('warning');
+                        timer.classList.remove('warning', 'danger');
+                        if (totalSeconds < 60) {
+                            timer.classList.add('danger');
+                        } else if (totalSeconds < 300) {
+                            timer.classList.add('warning');
+                        }
                     }
                 }
             })

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from django.urls import reverse
 from django.utils import timezone
@@ -234,30 +235,43 @@ def exam_view(request):
     return render(request, 'exam.html', context)  
 
 
+@csrf_exempt
+@require_GET
 def get_exam_progress(request):
     """AJAX endpoint to get exam progress and time remaining."""
-    if 'exam_id' not in request.session:
-        return JsonResponse({'error': 'No active exam'}, status=400)
-
-    exam_id = request.session.get('exam_id')
-    exam = get_object_or_404(StudentExam, id=exam_id)
-    question_ids = request.session.get('question_ids', [])
-
-    start_time = timezone.datetime.fromisoformat(request.session['exam_start_time'])
-    time_limit = timedelta(minutes=request.session['time_limit_minutes'])
-    elapsed = timezone.now() - start_time
-    time_remaining = time_limit - elapsed
-
-    if time_remaining.total_seconds() < 0:
+    if 'exam_id' in request.session:
+        exam_id = request.session.get('exam_id')
+        exam = get_object_or_404(StudentExam, id=exam_id)
+        question_ids = request.session.get('question_ids', [])
+        start_time = timezone.datetime.fromisoformat(request.session['exam_start_time'])
+        time_limit = timedelta(minutes=request.session['time_limit_minutes'])
+    elif 'staff_exam_id' in request.session:
+        exam_id = request.session.get('staff_exam_id')
+        exam = get_object_or_404(StaffStudentExam, id=exam_id)
+        question_ids = request.session.get('staff_question_ids', [])
+        start_time = timezone.datetime.fromisoformat(request.session['staff_exam_start_time'])
+        time_limit = timedelta(minutes=exam.course.time_limit_minutes)
+    else:
         return JsonResponse({
             'time_expired': True,
             'time_remaining': '00:00'
         })
 
-    minutes = int(time_remaining.total_seconds()) // 60
-    seconds = int(time_remaining.total_seconds()) % 60
+    elapsed = timezone.now() - start_time
+    time_remaining = time_limit - elapsed
+
+    total_seconds = max(0, int(time_remaining.total_seconds()))
+    if total_seconds <= 0:
+        return JsonResponse({
+            'time_expired': True,
+            'time_remaining': '00:00'
+        })
+
+    minutes = total_seconds // 60
+    seconds = total_seconds % 60
 
     return JsonResponse({
+        'time_expired': False,
         'time_remaining': f"{minutes:02d}:{seconds:02d}",
         'current_question': 1,
         'total_questions': len(question_ids),
@@ -331,11 +345,27 @@ def submit_exam_view(request):
         form = ExamSubmissionForm(request.POST)
         if form.is_valid():
             question_ids = request.session.get('question_ids', [])
+            answers_payload = request.POST.get('answers_payload', '{}')
+
+            try:
+                submitted_answers = json.loads(answers_payload)
+            except (TypeError, ValueError):
+                submitted_answers = {}
+
             correct_count = 0
 
             for question_id in question_ids:
-                answer = StudentAnswer.objects.filter(exam=exam, question_id=question_id).first()
-                if answer:
+                selected_answer = submitted_answers.get(str(question_id))
+                if selected_answer is None:
+                    existing_answer = StudentAnswer.objects.filter(exam=exam, question_id=question_id).first()
+                    if existing_answer:
+                        selected_answer = existing_answer.selected_answer
+                    else:
+                        selected_answer = None
+
+                if selected_answer is not None:
+                    answer, _ = StudentAnswer.objects.get_or_create(exam=exam, question_id=question_id)
+                    answer.selected_answer = selected_answer
                     answer.check_answer()
                     answer.save()
                     if answer.is_correct:

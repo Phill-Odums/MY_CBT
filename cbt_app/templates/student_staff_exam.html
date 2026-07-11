@@ -286,7 +286,7 @@
             Question 1 / {{ total_questions }}
         </div>
         <div class="topbar-progress-bar">
-            <div class="topbar-progress-fill" style="width: 0%"></div>
+            <div id="progress-fill-mobile" class="topbar-progress-fill" style="width: 0%"></div>
         </div>
     </div>
 </div>
@@ -334,6 +334,7 @@
 <form id="submit-form" method="POST" action="{{ submit_url }}">
     {% csrf_token %}
     <input type="hidden" name="confirm" value="on">
+    <input type="hidden" name="answers_payload" id="answers-payload" value="{}">
 </form>
 
 <script>
@@ -351,7 +352,19 @@
         document.getElementById('progress-label').textContent = `Progress: ${current}/${questions.length}`;
         document.getElementById('progress-label-mobile').textContent = `Question ${current} / ${questions.length}`;
         const percent = questions.length ? (current / questions.length) * 100 : 0;
-        document.getElementById('progress-fill').style.width = `${percent}%`;
+        const desktopBar = document.getElementById('progress-fill');
+        const mobileBar = document.getElementById('progress-fill-mobile');
+        if (desktopBar) {
+            desktopBar.style.width = `${percent}%`;
+        }
+        if (mobileBar) {
+            mobileBar.style.width = `${percent}%`;
+        }
+    }
+
+    function syncAnswersPayload() {
+        const payload = JSON.stringify(state.answers);
+        document.getElementById('answers-payload').value = payload;
     }
 
     function renderQuestion() {
@@ -382,6 +395,7 @@
 
             input.addEventListener('change', () => {
                 state.answers[question.id] = option.value;
+                syncAnswersPayload();
                 saveCurrentAnswer();
             });
 
@@ -443,7 +457,12 @@
     });
 
     function updateTimer() {
-        fetch('{% url "cbt:exam_progress" %}')
+        fetch('{% url "cbt:exam_progress" %}', {
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            credentials: 'same-origin'
+        })
             .then(response => response.json())
             .then(data => {
                 if (data.time_expired) {
@@ -460,6 +479,10 @@
             })
             .catch(error => console.error('Error:', error));
     }
+
+    document.getElementById('submit-form').addEventListener('submit', () => {
+        syncAnswersPayload();
+    });
 
     renderQuestion();
     updateTimer();
