@@ -78,6 +78,15 @@
         background-color: white;
         border-bottom: 1px solid #ddd;
     }
+
+    .student-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        margin-top: 10px;
+        color: #444;
+        font-size: 13px;
+    }
     
     .progress-label {
         font-size: clamp(12px, 3vw, 14px);
@@ -328,6 +337,10 @@
         <div class="progress-label" id="progress-label">Question 1 of {{ total_questions }}</div>
         <div class="progress">
             <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <div class="student-meta">
+            <span><strong>Full Name:</strong> {{ student_name }}</span>
+            <span><strong>Reg No:</strong> {{ student_id }}</span>
         </div>
     </div>
 

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from django.urls import reverse
@@ -230,6 +230,8 @@ def exam_view(request):
         'save_answer_url': reverse('cbt:save_exam_answer'),
         'submit_url': reverse('cbt:submit_exam'),
         'exam_id': exam.id,
+        'student_name': request.session.get('student_name', exam.student_name),
+        'student_id': request.session.get('student_id', exam.student_id),
     }
 
     return render(request, 'exam.html', context)  
@@ -616,6 +618,43 @@ def staff_course_results_view(request, course_id):
 
 
 @login_required(login_url='cbt:staff_login')
+def export_course_results_view(request, course_id):
+    """Export course exam results to an Excel-compatible CSV file."""
+    staff_profile = get_object_or_404(StaffProfile, user=request.user)
+    course = get_object_or_404(StaffCourse, id=course_id, staff=staff_profile)
+    exams = course.student_exams.all().order_by('-start_time')
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{course.course_name.replace(" ", "_")}_results.csv"'
+
+    import csv
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'Student Name',
+        'Student ID',
+        'Score',
+        #'Total Questions',
+        'Percentage',
+       # 'Status',
+       # 'Submission Date',
+    ])
+
+    for exam in exams:
+        writer.writerow([
+            exam.student_name,
+            exam.student_id,
+            exam.score if exam.score is not None else '',
+        #   exam.total_questions,
+            f"{exam.get_score_percentage()}%",
+           #'Passed' if exam.passed else 'Failed' if exam.passed is False else 'Pending',
+           # exam.end_time.strftime('%Y-%m-%d %H:%M:%S') if exam.end_time else '',
+        ])
+
+    return response
+
+
+@login_required(login_url='cbt:staff_login')
 def staff_student_exam_detail_view(request, course_id, exam_id):
     """View detailed results of a student's exam."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -784,6 +823,8 @@ def student_staff_exam_view(request):
         'save_answer_url': reverse('cbt:save_staff_exam_answer'),
         'submit_url': reverse('cbt:student_staff_submit_exam'),
         'exam_id': exam.id,
+        'student_name': request.session.get('student_name', exam.student_name),
+        'student_id': request.session.get('student_id', exam.student_id),
     }
 
     return render(request, 'student_staff_exam.html', context)

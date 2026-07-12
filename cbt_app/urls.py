@@ -32,6 +32,7 @@ urlpatterns = [
     path('staff/course/<int:course_id>/question/<int:question_id>/edit/', views.staff_edit_question_view, name='staff_edit_question'),
     path('staff/course/<int:course_id>/question/<int:question_id>/delete/', views.staff_delete_question_view, name='staff_delete_question'),
     path('staff/course/<int:course_id>/results/', views.staff_course_results_view, name='staff_course_results'),
+    path('staff/course/<int:course_id>/results/export/', views.export_course_results_view, name='export_course_results'),
     path('staff/course/<int:course_id>/exam/<int:exam_id>/', views.staff_student_exam_detail_view, name='staff_student_exam_detail'),
     
     # ==========================================
