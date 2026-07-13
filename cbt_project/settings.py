@@ -119,8 +119,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Session settings
-# Use signed cookies so session data stays with the browser instead of the server database.
-SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+# Keep authentication sessions server-backed so staff logins do not overwrite each other.
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 3600  # 1 hour
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_HTTPONLY = True

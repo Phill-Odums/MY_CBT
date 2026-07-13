@@ -152,6 +152,23 @@ class ExamProgressViewTests(TestCase):
         self.assertTrue(payload['time_expired'])
         self.assertEqual(payload['time_remaining'], '00:00')
 
+    def test_staff_login_uses_isolated_session_state_without_clobbering_exam_data(self):
+        self._seed_session(
+            exam_id=self.exam.id,
+            student_name='Jane Doe',
+            student_id='S001',
+        )
+
+        response = self.client.post(reverse('cbt:staff_login'), {
+            'username': 'staffuser',
+            'password': 'StrongPass1!',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.client.session['staff_auth_user_id'], self.user.id)
+        self.assertEqual(self.client.session['exam_id'], self.exam.id)
+        self.assertEqual(self.client.session['student_name'], 'Jane Doe')
+
     def test_submit_exam_uses_client_answers_payload_for_grading(self):
         subject = Subject.objects.create(name='Math')
         question = Question.objects.create(

@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from functools import wraps
 from datetime import timedelta
 import json
 import random
@@ -166,9 +166,73 @@ def login_view(request):
 
 
 def logout_view(request):
-    """Clear exam session."""
-    request.session.flush()
+    """Clear exam session without affecting staff authentication."""
+    _clear_exam_session_data(request)
     return redirect('cbt:login')
+
+
+def _clear_exam_session_data(request):
+    """Remove exam-specific session keys without affecting staff auth sessions."""
+    for key in [
+        'exam_id', 'student_name', 'student_id', 'exam_start_time', 'time_limit_minutes',
+        'question_ids', 'current_question_index', 'staff_exam_id', 'staff_exam_start_time',
+        'staff_question_ids', 'staff_current_question_index', 'course_code', 'course_id'
+    ]:
+        request.session.pop(key, None)
+
+    request.session.modified = True
+
+
+def _get_staff_user_from_session(request):
+    """Return the currently authenticated staff user from the dedicated staff session namespace."""
+    user_id = request.session.get('staff_auth_user_id')
+    if not user_id:
+        return None
+
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        request.session.pop('staff_auth_user_id', None)
+        request.session.pop('staff_auth_username', None)
+        request.session.modified = True
+        return None
+
+    if not hasattr(user, 'staff_profile'):
+        request.session.pop('staff_auth_user_id', None)
+        request.session.pop('staff_auth_username', None)
+        request.session.modified = True
+        return None
+
+    return user
+
+
+def _staff_login(request, user):
+    """Authenticate a staff user in a dedicated session namespace."""
+    request.session['staff_auth_user_id'] = user.id
+    request.session['staff_auth_username'] = user.get_username()
+    request.session.modified = True
+
+
+def _staff_logout(request):
+    """Remove the dedicated staff authentication data from the session."""
+    request.session.pop('staff_auth_user_id', None)
+    request.session.pop('staff_auth_username', None)
+    request.session.modified = True
+
+
+def staff_login_required(view_func):
+    """Require a staff user to be authenticated through the dedicated staff session key."""
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        user = _get_staff_user_from_session(request)
+        if user is None:
+            return redirect('cbt:staff_login')
+
+        request.user = user
+        request.staff_user = user
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
 
 
 # ==========================================
@@ -383,7 +447,7 @@ def submit_exam_view(request):
 
             exam.save()
 
-            request.session.flush()
+            _clear_exam_session_data(request)
 
             return redirect('cbt:results', exam_id=exam_id)
     else:
@@ -455,7 +519,7 @@ def exam_review_view(request, exam_id):
 
 def staff_register_view(request):
     """Staff registration page."""
-    if request.user.is_authenticated and hasattr(request.user, 'staff_profile'):
+    if _get_staff_user_from_session(request) is not None:
         return redirect('cbt:staff_dashboard')
 
     if request.method == 'POST':
@@ -479,7 +543,7 @@ def staff_register_view(request):
             )
 
             # Log user in
-            login(request, user)
+            _staff_login(request, user)
             return redirect('cbt:staff_dashboard')
     else:
         form = StaffRegistrationForm()
@@ -489,7 +553,7 @@ def staff_register_view(request):
 
 def staff_login_view(request):
     """Staff login page."""
-    if request.user.is_authenticated and hasattr(request.user, 'staff_profile'):
+    if _get_staff_user_from_session(request) is not None:
         return redirect('cbt:staff_dashboard')
 
     if request.method == 'POST':
@@ -498,7 +562,7 @@ def staff_login_view(request):
         user = authenticate(request, username=username, password=password)
 
         if user is not None and hasattr(user, 'staff_profile'):
-            login(request, user)
+            _staff_login(request, user)
             return redirect('cbt:staff_dashboard')
         else:
             return render(request, 'staff_login.html', {'error': 'Invalid credentials or not a staff member.'})
@@ -506,7 +570,7 @@ def staff_login_view(request):
     return render(request, 'staff_login.html')
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def staff_dashboard_view(request):
     """Staff dashboard showing courses and statistics."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -519,7 +583,7 @@ def staff_dashboard_view(request):
     return render(request, 'staff_dashboard.html', context)
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def staff_create_course_view(request):
     """Create a new course."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -537,7 +601,7 @@ def staff_create_course_view(request):
     return render(request, 'staff_create_course.html', {'form': form})
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def staff_course_detail_view(request, course_id):
     """View course details and manage questions."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -552,7 +616,7 @@ def staff_course_detail_view(request, course_id):
     return render(request, 'staff_course_detail.html', context)
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def staff_add_question_view(request, course_id):
     """Add a question to a course."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -571,7 +635,7 @@ def staff_add_question_view(request, course_id):
     return render(request, 'staff_add_question.html', {'form': form, 'course': course})
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def staff_edit_question_view(request, course_id, question_id):
     """Edit a question."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -589,7 +653,7 @@ def staff_edit_question_view(request, course_id, question_id):
     return render(request, 'staff_edit_question.html', {'form': form, 'course': course, 'question': question})
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def staff_delete_question_view(request, course_id, question_id):
     """Delete a question."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -603,7 +667,7 @@ def staff_delete_question_view(request, course_id, question_id):
     return render(request, 'staff_delete_question.html', {'question': question, 'course': course})
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def staff_course_results_view(request, course_id):
     """View all student results for a course."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -617,7 +681,7 @@ def staff_course_results_view(request, course_id):
     return render(request, 'staff_course_results.html', context)
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def export_course_results_view(request, course_id):
     """Export course exam results to an Excel-compatible CSV file."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -654,7 +718,7 @@ def export_course_results_view(request, course_id):
     return response
 
 
-@login_required(login_url='cbt:staff_login')
+@staff_login_required
 def staff_student_exam_detail_view(request, course_id, exam_id):
     """View detailed results of a student's exam."""
     staff_profile = get_object_or_404(StaffProfile, user=request.user)
@@ -672,7 +736,7 @@ def staff_student_exam_detail_view(request, course_id, exam_id):
 
 def staff_logout_view(request):
     """Staff logout."""
-    logout(request)
+    _staff_logout(request)
     return redirect('cbt:staff_login')
 
 
